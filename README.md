@@ -31,7 +31,7 @@ O WhatsApp abre a mensagem pronta. Você escolhe a conversa e confirma o envio; 
 
 ## Dados e atualização
 
-O **X** esconde a janela no ícone perto do relógio, mantendo o turno, campos ainda digitados e lembretes ativos. Clique no ícone ou abra o executável novamente para voltar. Ao chegar um lembrete, a janela volta à barra de tarefas sem tomar o foco.
+O **X** esconde a janela silenciosamente no ícone perto do relógio, mantendo o turno, campos ainda digitados e lembretes ativos. Clique no ícone ou abra o executável novamente para voltar. Ao chegar um lembrete, a janela volta à barra de tarefas sem tomar o foco.
 
 Para encerrar de verdade, clique com o botão direito no ícone e escolha **Sair do aplicativo** (também disponível no menu Turno). As vendas registradas são gravadas em disco e reaparecem ao abrir novamente. A saída explícita confirma que campos ainda não registrados serão descartados; o X apenas os mantém na janela escondida. Encerrar o Windows encerra o processo normalmente.
 

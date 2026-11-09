@@ -1,4 +1,6 @@
-﻿PRIVATE MOMENTS V10 — HORÁRIO CORRETO NOS ALERTAS
+﻿O X esconde a janela SILENCIOSAMENTE, sem aviso de minimização.
+
+PRIVATE MOMENTS V10 — HORÁRIO CORRETO NOS ALERTAS
 Cada notificação mostra sua hora: 14:00 — Enviar relatório;
 23:00 — Enviar relatório; 00:00 — Enviar relatório.
 Só às 02:00: 02:00 — Enviar relatório de fechamento.

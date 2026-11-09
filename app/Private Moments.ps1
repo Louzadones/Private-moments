@@ -522,7 +522,6 @@ $form.Add_FormClosing({ param($sender, $e)
     catch { $e.Cancel = $true; [Windows.Forms.MessageBox]::Show("Não foi possível salvar. $($_.Exception.Message)", 'Erro ao salvar') | Out-Null; return }
     if (-not $script:allowExit -and $e.CloseReason -eq [Windows.Forms.CloseReason]::UserClosing) {
         $e.Cancel=$true; $form.Hide()
-        $tray.ShowBalloonTip(5000, 'Private Moments continua aberto', 'Seu turno foi mantido. Clique no ícone perto do relógio para reabrir. Para encerrar, use Sair do aplicativo.', [Windows.Forms.ToolTipIcon]::Info)
     }
 })
 try {

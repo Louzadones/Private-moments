@@ -208,7 +208,9 @@ if ($entryRows.WD.Packs.Value -ne 1 -or $entryRows.WD.Loose.Value -ne 1) { throw
 $entryRows.WD.Loose.Value = 2; $entryRows.WD.Card.Text = '60'; $add.PerformClick()
 if ($script:state.Sales.Count -ne 5 -or (Get-RemainingStock $script:state).WD -ne 232) { throw 'Edit stock failed' }
 $entryRows.Shop.Cash.Text='12,34'
+$noticeBeforeClose=$tray.BalloonTipTitle
 $form.Close()
+if($tray.BalloonTipTitle -ne $noticeBeforeClose){throw 'Hiding to tray must not replace notification with a minimization notice'}
 if ($form.IsDisposed -or $form.Visible -or -not $tray.Visible -or -not $timer.Enabled) { throw 'Close must hide to tray and keep reminders active' }
 if ($entryRows.Shop.Cash.Text -ne '12,34' -or $script:state.Sales.Count -ne 5) { throw 'Close lost draft or registered sales' }
 $openTrayItem.PerformClick()
