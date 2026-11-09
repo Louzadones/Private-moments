@@ -8,6 +8,13 @@ public class EmptyNumberBox : NumericUpDown {
  protected override void UpdateEditText() { base.UpdateEditText(); if (Text == "0") Text = String.Empty; }
  protected override void OnEnter(EventArgs e) { base.OnEnter(e); Select(0, Text.Length); }
 }
+public class ToggleRadioButton : RadioButton {
+ protected override void OnClick(EventArgs e) {
+  bool wasChecked = Checked;
+  base.OnClick(e);
+  if (wasChecked) Checked = false;
+ }
+}
 "@
 [Windows.Forms.Application]::EnableVisualStyles()
 . (Join-Path $PSScriptRoot 'Core.ps1')
@@ -67,7 +74,7 @@ function Make-Group($Parent, $Text, $X, $Y, $W, $H) {
     $o = New-Object Windows.Forms.GroupBox; $o.Text = $Text; $o.SetBounds($X, $Y, $W, $H); $Parent.Controls.Add($o); return $o
 }
 function Radio($Parent, $Text, $X, $Y, $W) {
-    $o = New-Object Windows.Forms.RadioButton; $o.Text = $Text; $o.SetBounds($X, $Y, $W, 28); $Parent.Controls.Add($o); return $o
+    $o = New-Object ToggleRadioButton; $o.Text = $Text; $o.SetBounds($X, $Y, $W, 28); $Parent.Controls.Add($o); return $o
 }
 function Reset-Entry {
     $script:editingId = $null; $add.Text = 'Registrar venda'; $cancel.Visible = $false

@@ -1,4 +1,9 @@
-﻿PRIVATE MOMENTS V7 — MELHORIAS DE UX
+﻿PRIVATE MOMENTS V8
+Clique novamente na bolinha marcada para remover a seleção de pagamento.
+Clique em outra opção para trocar diretamente; desmarcar Dividido oculta
+os campos extras. Cada categoria mantém sua própria escolha.
+
+PRIVATE MOMENTS V7 — MELHORIAS DE UX
 
 O botão Registrar venda destaca a ação principal e só é liberado quando
 a venda está válida. A mensagem abaixo do total explica pagamentos que

@@ -114,6 +114,25 @@ if (-not ($wdPacks.TabIndex -lt $wdLoose.TabIndex -and $wdLoose.TabIndex -lt $jd
 $shiftDate.Value = [datetime]'2026-11-09'; $saveSettings.PerformClick()
 if ($tabs.TabPages.Contains($setupTab)) { throw 'Setup visible after save' }
 if ($add.Enabled) { throw 'Empty sale must not be submittable' }
+function Click-Payment($Radio) {
+    $method = $Radio.GetType().GetMethod('OnClick', [Reflection.BindingFlags]'Instance,NonPublic')
+    $null = $method.Invoke($Radio, @([EventArgs]::Empty))
+}
+foreach ($category in @('WD','JD','SD','Cinema')) {
+    $r = $entryRows[$category]
+    foreach ($radio in @($r.CashRadio,$r.CardRadio,$r.SplitRadio)) {
+        Click-Payment $radio
+        if (-not $radio.Checked) { throw 'First click must select payment' }
+        Click-Payment $radio
+        if ($radio.Checked) { throw 'Second click must clear payment' }
+    }
+    Click-Payment $r.CashRadio; Click-Payment $r.CardRadio
+    if ($r.CashRadio.Checked -or -not $r.CardRadio.Checked) { throw 'Switching payment must remain exclusive' }
+    Click-Payment $r.SplitRadio
+    if ($r.CardRadio.Checked -or -not $r.Cash.Visible -or -not $r.Card.Visible) { throw 'Split fields must show on selection' }
+    Click-Payment $r.SplitRadio
+    if ($r.Cash.Visible -or $r.Card.Visible) { throw 'Split fields must hide on deselection' }
+}
 $entryRows.WD.Loose.Value=1
 if ($add.Enabled -or $basketHint.Text -notmatch 'WD: escolha') { throw 'Missing payment guidance failed' }
 $entryRows.WD.SplitRadio.Checked=$true; $entryRows.WD.Cash.Text='10'

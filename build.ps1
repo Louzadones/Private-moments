@@ -8,5 +8,5 @@ if ($LASTEXITCODE -ne 0) { throw 'Falha ao compilar o aplicativo.' }
 if ($Package) {
     $null = New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'releases') -Force
     $files = @('Private Moments.exe','Private Moments.ps1','Core.ps1','Fechamento.txt','LEIA-ME.txt') | ForEach-Object { Join-Path $PSScriptRoot "app/$_" }
-    Compress-Archive -LiteralPath $files -DestinationPath (Join-Path $PSScriptRoot 'releases/Private-Moments-V7.zip') -Force
+    Compress-Archive -LiteralPath $files -DestinationPath (Join-Path $PSScriptRoot 'releases/Private-Moments-V8.zip') -Force
 }

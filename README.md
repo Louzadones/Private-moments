@@ -4,7 +4,7 @@ Aplicativo para Windows que registra vendas, controla estoque e prepara os relat
 
 ## Usar
 
-Baixe [Private-Moments-V7.zip](releases/Private-Moments-V7.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Só a janela do aplicativo aparece.
+Baixe [Private-Moments-V8.zip](releases/Private-Moments-V8.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Só a janela do aplicativo aparece.
 
 Requer Windows com Windows PowerShell 5.1 e .NET Framework 4.x. Não requer Python, Excel ou instalação de pacotes.
 
@@ -12,6 +12,8 @@ Requer Windows com Windows PowerShell 5.1 e .NET Framework 4.x. Não requer Pyth
 2. Informe as quantidades vendidas nas linhas WD, JD, SD e Cinema. Os preços são automáticos.
 3. Escolha Dinheiro ou Cartão; Dividido abre os dois campos. No Shop, digite os valores diretamente em dinheiro/cartão.
 4. Registre a venda. O aplicativo limpa os campos e atualiza estoque e relatórios.
+
+Clique novamente na bolinha marcada para desmarcá-la. Escolher outra opção troca o pagamento diretamente; ao desmarcar Dividido, os campos extras são ocultados. A seleção continua independente por categoria.
 
 O botão de registrar só fica disponível quando a venda está válida. A mensagem abaixo do total explica o que falta ou quanto resta pagar. **Ctrl+Enter** registra uma venda válida; **Esc** cancela uma correção. Passe o mouse nos campos para consultar preços e instruções.
 
