@@ -1,4 +1,13 @@
-﻿PRIVATE MOMENTS V8
+﻿PRIVATE MOMENTS V9 — FECHAR PARA OS ÍCONES OCULTOS
+
+O X apenas esconde a janela e mantém o turno, campos digitados e lembretes.
+Clique no ícone perto do relógio ou abra o executável novamente para voltar.
+No horário do lembrete, a janela retorna à barra sem tomar o foco.
+Para encerrar: botão direito no ícone > Sair do aplicativo, ou menu Turno.
+As vendas REGISTRADAS ficam salvas em dados.json e voltam na próxima abertura.
+Sair de verdade descarta campos ainda não registrados após confirmação.
+
+PRIVATE MOMENTS V8
 Clique novamente na bolinha marcada para remover a seleção de pagamento.
 Clique em outra opção para trocar diretamente; desmarcar Dividido oculta
 os campos extras. Cada categoria mantém sua própria escolha.

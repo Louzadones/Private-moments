@@ -15,6 +15,15 @@ public class ToggleRadioButton : RadioButton {
   if (wasChecked) Checked = false;
  }
 }
+public class TrayForm : Form {
+ private bool background;
+ protected override bool ShowWithoutActivation { get { return background; } }
+ public void ShowInBackground() { background = true; try { Show(); } finally { background = false; } }
+ protected override void WndProc(ref Message m) {
+  if (m.Msg == 0x802A) { Show(); WindowState = FormWindowState.Normal; Activate(); m.Result = IntPtr.Zero; return; }
+  base.WndProc(ref m);
+ }
+}
 "@
 [Windows.Forms.Application]::EnableVisualStyles()
 . (Join-Path $PSScriptRoot 'Core.ps1')
@@ -23,12 +32,23 @@ $backupPath = Join-Path $PSScriptRoot 'dados.backup.json'
 $created = $false
 $mutex = New-Object Threading.Mutex($true, 'Local\PrivateMomentsSalesApp', [ref]$created)
 if (-not $created) {
-    [Windows.Forms.MessageBox]::Show('Private Moments já está aberto. Procure a janela na barra de tarefas.', 'Private Moments') | Out-Null
+    Add-Type -TypeDefinition @"
+using System; using System.Runtime.InteropServices;
+public static class ExistingWindow {
+ [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern IntPtr FindWindow(string cls, string title);
+ [DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr handle, int message, IntPtr wparam, IntPtr lparam);
+ [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr handle);
+}
+"@
+    $existing = [ExistingWindow]::FindWindow($null, 'Private Moments | Vendas e fechamento')
+    if ($existing -ne [IntPtr]::Zero) { $null=[ExistingWindow]::SendMessage($existing,0x802A,[IntPtr]::Zero,[IntPtr]::Zero); $null=[ExistingWindow]::SetForegroundWindow($existing) }
+    else { [Windows.Forms.MessageBox]::Show('Private Moments já está iniciando. Aguarde a janela ou abra pelo ícone perto do relógio.', 'Private Moments') | Out-Null }
     $mutex.Dispose(); exit
 }
 $script:state = New-State
 $script:editingId = $null
 $script:uiReady = $false
+$script:allowExit = $false
 try {
     if (Test-Path -LiteralPath $dataPath) {
         $loaded = Get-Content -LiteralPath $dataPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -258,7 +278,7 @@ function Start-NewShift {
     Save-State; Reset-Entry; Refresh-View; Show-Setup
     $status.Text = 'Novo turno. Preencha a data, o responsável e os estoques iniciais e clique em Salvar.'
 }
-$form = New-Object Windows.Forms.Form
+$form = New-Object TrayForm
 $form.Text = 'Private Moments | Vendas e fechamento'
 $form.ClientSize = New-Object Drawing.Size(1040, 690)
 $form.MinimumSize = $form.Size; $form.MaximumSize = $form.Size
@@ -435,10 +455,32 @@ function Refresh-View {
 }
 $tray = New-Object Windows.Forms.NotifyIcon; $tray.Icon = [Drawing.SystemIcons]::Information
 $tray.Text = 'Private Moments — relatório por hora'; $tray.Visible = $true
-$tray.Add_Click({ $form.Show(); $form.WindowState = 'Normal'; $form.Activate() })
+function Restore-App {
+    $form.Show(); $form.WindowState = 'Normal'; $form.Activate()
+}
+function Request-Exit {
+    $choice = [Windows.Forms.MessageBox]::Show('Encerrar o aplicativo? As vendas registradas estão salvas. Campos ainda não registrados serão descartados e os lembretes vão parar.', 'Sair do Private Moments', 'YesNo', 'Question')
+    if ($choice -ne 'Yes') { return }
+    $script:allowExit = $true
+    $form.Close()
+    if (-not $form.IsDisposed) { $script:allowExit = $false }
+}
+$trayMenu = New-Object Windows.Forms.ContextMenuStrip
+$openTrayItem = New-Object Windows.Forms.ToolStripMenuItem('Abrir Private Moments')
+$openTrayItem.Add_Click({ Restore-App })
+$exitTrayItem = New-Object Windows.Forms.ToolStripMenuItem('Sair do aplicativo')
+$exitTrayItem.Add_Click({ Request-Exit })
+$null=$trayMenu.Items.Add($openTrayItem); $null=$trayMenu.Items.Add((New-Object Windows.Forms.ToolStripSeparator)); $null=$trayMenu.Items.Add($exitTrayItem)
+$tray.ContextMenuStrip=$trayMenu
+$tray.Add_MouseClick({ param($sender,$e) if($e.Button -eq [Windows.Forms.MouseButtons]::Left){ Restore-App } })
+$tray.Add_BalloonTipClicked({ Restore-App })
+$exitMainItem = New-Object Windows.Forms.ToolStripMenuItem('Sair do aplicativo...')
+$exitMainItem.Add_Click({ Request-Exit }); $null=$shiftMenu.DropDownItems.Add($exitMainItem)
 Add-Type -TypeDefinition @"
 using System; using System.Runtime.InteropServices;
 public static class TaskbarAlert {
+ [DllImport("user32.dll")] private static extern IntPtr SendMessage(IntPtr handle, int message, IntPtr wparam, IntPtr lparam);
+ public static void Restore(IntPtr handle) { SendMessage(handle, 0x802A, IntPtr.Zero, IntPtr.Zero); }
  [StructLayout(LayoutKind.Sequential)] public struct FLASHWINFO { public uint cbSize; public IntPtr hwnd; public uint dwFlags; public uint uCount; public uint dwTimeout; }
  [DllImport("user32.dll")] public static extern bool FlashWindowEx(ref FLASHWINFO info);
  public static void Flash(IntPtr handle, bool active) { FLASHWINFO f = new FLASHWINFO(); f.cbSize = (uint)Marshal.SizeOf(f); f.hwnd = handle; f.dwFlags = active ? 6u : 0u; f.uCount = 0; f.dwTimeout = 0; FlashWindowEx(ref f); }
@@ -461,6 +503,7 @@ function Check-Reminder([datetime]$Now) {
     $title = 'Hora do relatório — ' + $slot.ToString('HH:mm')
     if ($closing) { $title = '02:00 — hora do fechamento'; $tabs.SelectedTab = $closingTab }
     $status.Text = $title + '. Prepare e envie a mensagem no WhatsApp.'
+    if (-not $form.Visible) { $form.ShowInBackground() }
     $script:reminderPending = $true
     [TaskbarAlert]::Flash($form.Handle, $true)
     $tray.ShowBalloonTip(15000, $title, 'O relatório está pronto. Nenhuma mensagem foi enviada automaticamente.', [Windows.Forms.ToolTipIcon]::Info)
@@ -469,7 +512,11 @@ $timer.Add_Tick({ Check-Reminder (Get-Date) })
 $form.Add_Activated({ if ($script:reminderPending) { Acknowledge-Reminder } })
 $form.Add_FormClosing({ param($sender, $e)
     try { Save-State }
-    catch { $e.Cancel = $true; [Windows.Forms.MessageBox]::Show("Não foi possível salvar. $($_.Exception.Message)", 'Erro ao salvar') | Out-Null }
+    catch { $e.Cancel = $true; [Windows.Forms.MessageBox]::Show("Não foi possível salvar. $($_.Exception.Message)", 'Erro ao salvar') | Out-Null; return }
+    if (-not $script:allowExit -and $e.CloseReason -eq [Windows.Forms.CloseReason]::UserClosing) {
+        $e.Cancel=$true; $form.Hide()
+        $tray.ShowBalloonTip(5000, 'Private Moments continua aberto', 'Seu turno foi mantido. Clique no ícone perto do relógio para reabrir. Para encerrar, use Sair do aplicativo.', [Windows.Forms.ToolTipIcon]::Info)
+    }
 })
 try {
     $script:uiReady = $true; Load-Settings; Reset-Entry; Save-State; Refresh-View
@@ -482,5 +529,5 @@ try {
     [Windows.Forms.MessageBox]::Show($_.Exception.Message, 'Erro no aplicativo') | Out-Null
 } finally {
     $script:uiReady = $false; $timer.Stop(); $timer.Dispose(); $tray.Visible = $false; $tray.Dispose()
-    $tooltips.Dispose(); $form.Dispose(); $mutex.ReleaseMutex(); $mutex.Dispose()
+    $trayMenu.Dispose(); $tooltips.Dispose(); $form.Dispose(); $mutex.ReleaseMutex(); $mutex.Dispose()
 }

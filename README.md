@@ -4,7 +4,7 @@ Aplicativo para Windows que registra vendas, controla estoque e prepara os relat
 
 ## Usar
 
-Baixe [Private-Moments-V8.zip](releases/Private-Moments-V8.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Só a janela do aplicativo aparece.
+Baixe [Private-Moments-V9.zip](releases/Private-Moments-V9.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Só a janela do aplicativo aparece.
 
 Requer Windows com Windows PowerShell 5.1 e .NET Framework 4.x. Não requer Python, Excel ou instalação de pacotes.
 
@@ -28,6 +28,10 @@ O relógio segue o PC. Com o aplicativo aberto, os lembretes vão das 12:00 às 
 O WhatsApp abre a mensagem pronta. Você escolhe a conversa e confirma o envio; não há envio automático nem confirmação de recebimento.
 
 ## Dados e atualização
+
+O **X** esconde a janela no ícone perto do relógio, mantendo o turno, campos ainda digitados e lembretes ativos. Clique no ícone ou abra o executável novamente para voltar. Ao chegar um lembrete, a janela volta à barra de tarefas sem tomar o foco.
+
+Para encerrar de verdade, clique com o botão direito no ícone e escolha **Sair do aplicativo** (também disponível no menu Turno). As vendas registradas são gravadas em disco e reaparecem ao abrir novamente. A saída explícita confirma que campos ainda não registrados serão descartados; o X apenas os mantém na janela escondida. Encerrar o Windows encerra o processo normalmente.
 
 Os arquivos `dados.json`, `dados.backup.json` e a pasta `turnos/` ficam junto ao aplicativo. Contêm informações financeiras e estão excluídos do Git. Não há sincronização entre computadores.
 

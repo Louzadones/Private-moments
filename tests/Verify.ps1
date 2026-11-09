@@ -187,7 +187,23 @@ Edit-Selected
 if ($entryRows.WD.Packs.Value -ne 1 -or $entryRows.WD.Loose.Value -ne 1) { throw 'Edit did not load separate quantities' }
 $entryRows.WD.Loose.Value = 2; $entryRows.WD.Card.Text = '60'; $add.PerformClick()
 if ($script:state.Sales.Count -ne 5 -or (Get-RemainingStock $script:state).WD -ne 232) { throw 'Edit stock failed' }
+$entryRows.Shop.Cash.Text='12,34'
 $form.Close()
+if ($form.IsDisposed -or $form.Visible -or -not $tray.Visible -or -not $timer.Enabled) { throw 'Close must hide to tray and keep reminders active' }
+if ($entryRows.Shop.Cash.Text -ne '12,34' -or $script:state.Sales.Count -ne 5) { throw 'Close lost draft or registered sales' }
+$openTrayItem.PerformClick()
+if (-not $form.Visible -or $entryRows.Shop.Cash.Text -ne '12,34') { throw 'Tray restore lost draft' }
+$form.Close()
+$null=[TaskbarAlert]::Restore($form.Handle)
+if (-not $form.Visible) { throw 'Opening executable again must restore the hidden managed window' }
+$form.Close()
+$script:lastCheck=[datetime]'2026-11-10T00:59:59'; $script:state.LastReminder=''
+Check-Reminder ([datetime]'2026-11-10T01:00:00')
+if (-not $form.Visible -or -not $script:reminderPending) { throw 'Hidden app reminder must return to taskbar' }
+Acknowledge-Reminder
+$script:allowExit=$true
+$form.Close()
+if (-not $form.IsDisposed) { throw 'Explicit quit must close app' }
 '@
 $script = $script.Replace('LocalPrivateMomentsSalesApp', ('LocalPrivateMomentsQA-' + [guid]::NewGuid().ToString('N')))
 $script = $script.Replace('[Windows.Forms.Application]::Run($form)', $replacement)
