@@ -1,4 +1,11 @@
-﻿PRIVATE MOMENTS V9 — FECHAR PARA OS ÍCONES OCULTOS
+﻿PRIVATE MOMENTS V10 — HORÁRIO CORRETO NOS ALERTAS
+Cada notificação mostra sua hora: 14:00 — Enviar relatório;
+23:00 — Enviar relatório; 00:00 — Enviar relatório.
+Só às 02:00: 02:00 — Enviar relatório de fechamento.
+O rodapé mostra o próximo alerta. Não há a frase sobre envio automático.
+Alertas antigos de fechamento não são repetidos fora de seu horário.
+
+PRIVATE MOMENTS V9 — FECHAR PARA OS ÍCONES OCULTOS
 
 O X apenas esconde a janela e mantém o turno, campos digitados e lembretes.
 Clique no ícone perto do relógio ou abra o executável novamente para voltar.
@@ -96,7 +103,7 @@ de intervalos. A apresentação visual e pequenos atrasos dependem do Windows.
 É necessário manter o app aberto e o PC ligado e ativo. Não pode avisar no
 horário exato com o PC desligado/em suspensão ou o aplicativo fechado.
 Ao retomar de suspensão com o app ainda aberto, avisa o último horário
-atravessado. Reabrir o aplicativo não dispara todos os avisos passados.
+apenas se ele estiver na hora atual. Reabrir não dispara avisos passados.
 Não altere a data do PC; corrija a data de início no menu se cadastrou errado.
 
 DADOS

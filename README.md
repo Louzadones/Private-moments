@@ -4,7 +4,7 @@ Aplicativo para Windows que registra vendas, controla estoque e prepara os relat
 
 ## Usar
 
-Baixe [Private-Moments-V9.zip](releases/Private-Moments-V9.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Só a janela do aplicativo aparece.
+Baixe [Private-Moments-V10.zip](releases/Private-Moments-V10.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Só a janela do aplicativo aparece.
 
 Requer Windows com Windows PowerShell 5.1 e .NET Framework 4.x. Não requer Python, Excel ou instalação de pacotes.
 
@@ -24,6 +24,8 @@ O relatório curto mantém WD como a soma dos valores de WD + JD + SD, conforme 
 ## Lembretes e envio
 
 O relógio segue o PC. Com o aplicativo aberto, os lembretes vão das 12:00 às 01:00; às 02:00 há o aviso de fechamento. O aplicativo solicita o piscar da barra de tarefas e apresenta uma notificação. A apresentação e pequenos atrasos dependem do Windows. Computador desligado/em suspensão ou aplicativo fechado impedem o aviso no horário exato.
+
+Cada aviso mostra o próprio horário: “14:00 — Enviar relatório”, “00:00 — Enviar relatório” e, exclusivamente às 02:00, “02:00 — Enviar relatório de fechamento”. O rodapé mostra o próximo alerta. Ao retomar após uma pausa, só há aviso se existir um horário programado na hora atual; um fechamento antigo não reaparece à tarde.
 
 O WhatsApp abre a mensagem pronta. Você escolhe a conversa e confirma o envio; não há envio automático nem confirmação de recebimento.
 

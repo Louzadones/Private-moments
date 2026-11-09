@@ -493,20 +493,27 @@ if ($null -eq $script:state.PSObject.Properties['LastReminder']) { $script:state
 $clockLabel = Label $form '' 22 624 770 10
 $timer = New-Object Windows.Forms.Timer; $timer.Interval = 500
 function Check-Reminder([datetime]$Now) {
-    $clockLabel.Text = 'PC: ' + $Now.ToString('dd/MM/yyyy HH:mm:ss') + ' | Relatórios: 12:00 a 01:00; fechamento: 02:00'
+    $next = Get-NextReminder $script:state.Settings $Now
+    $schedule = 'Cadastre o início do turno para ativar os lembretes.'
+    if ($null -ne $next) { $schedule = 'Próximo: ' + (Get-ReminderText $next) }
+    elseif ($script:state.Settings.Ready) { $schedule = 'Sem próximos alertas neste turno. Confira a data ou inicie um novo turno.' }
+    $clockLabel.Text = 'PC: ' + $Now.ToString('dd/MM/yyyy HH:mm:ss') + ' | ' + $schedule
     $slot = Get-DueReminder $script:state.Settings $script:lastCheck $Now $script:state.LastReminder
     $script:lastCheck = $Now
     if ($null -eq $slot) { return }
     $script:state.LastReminder = $slot.ToString('s')
     try { Save-State } catch { $status.Text = 'Lembrete ativo, mas não foi possível salvar seu horário.' }
     $closing = $slot.Hour -eq 2
-    $title = 'Hora do relatório — ' + $slot.ToString('HH:mm')
-    if ($closing) { $title = '02:00 — hora do fechamento'; $tabs.SelectedTab = $closingTab }
+    $title = Get-ReminderText $slot
+    if ($closing) { $tabs.SelectedTab = $closingTab }
     $status.Text = $title + '. Prepare e envie a mensagem no WhatsApp.'
     if (-not $form.Visible) { $form.ShowInBackground() }
     $script:reminderPending = $true
     [TaskbarAlert]::Flash($form.Handle, $true)
-    $tray.ShowBalloonTip(15000, $title, 'O relatório está pronto. Nenhuma mensagem foi enviada automaticamente.', [Windows.Forms.ToolTipIcon]::Info)
+    $tray.BalloonTipTitle = $title
+    $tray.BalloonTipText = 'O relatório está pronto. Enviar relatório.'
+    $tray.BalloonTipIcon = [Windows.Forms.ToolTipIcon]::Info
+    $tray.ShowBalloonTip(15000)
 }
 $timer.Add_Tick({ Check-Reminder (Get-Date) })
 $form.Add_Activated({ if ($script:reminderPending) { Acknowledge-Reminder } })

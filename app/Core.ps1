@@ -124,9 +124,23 @@ function Get-DueReminder($Settings, [datetime]$After, [datetime]$Now, [string]$L
     $due = $null
     for ($hour = 12; $hour -le 26; $hour++) {
         $slot = $day.AddHours($hour)
-        if ($slot -gt $After -and $slot -le $Now -and $slot.ToString('s') -ne $LastReminder) { $due = $slot }
+        if ($slot -gt $After -and $slot -le $Now -and $slot -ge $Now.Date.AddHours($Now.Hour) -and $slot.ToString('s') -ne $LastReminder) { $due = $slot }
     }
     return $due
+}
+function Get-ReminderText([datetime]$Slot) {
+    $text = $Slot.ToString('HH:mm') + ' — Enviar relatório'
+    if ($Slot.Hour -eq 2) { $text += ' de fechamento' }
+    return $text
+}
+function Get-NextReminder($Settings, [datetime]$Now) {
+    if (-not $Settings.Ready) { return $null }
+    $day = [datetime]::ParseExact($Settings.Date, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    for ($hour = 12; $hour -le 26; $hour++) {
+        $slot = $day.AddHours($hour)
+        if ($slot -gt $Now) { return $slot }
+    }
+    return $null
 }
 function Upgrade-State($State) {
     if ($State.Version -eq 1) {

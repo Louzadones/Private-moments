@@ -102,6 +102,16 @@ Assert ((Get-DueReminder $settings ([datetime]'2026-11-09T23:59:59') ([datetime]
 Assert ((Get-DueReminder $settings ([datetime]'2026-11-10T01:59:59') ([datetime]'2026-11-10T02:00:00') '').Hour -eq 2) 'Closing reminder'
 Assert ($null -eq (Get-DueReminder $settings ([datetime]'2026-11-10T02:59:59') ([datetime]'2026-11-10T03:00:00') '')) 'No 3am reminder'
 Assert ($null -eq (Get-DueReminder $settings ([datetime]'2026-11-09T11:59:59') ([datetime]'2026-11-09T12:00:00') '2026-11-09T12:00:00')) 'No duplicate reminder'
+for ($hour=12; $hour -le 26; $hour++) {
+    $slot=([datetime]'2026-11-09').AddHours($hour)
+    $expected=$slot.ToString('HH:mm') + ' — Enviar relatório'
+    if($hour -eq 26){$expected+=' de fechamento'}
+    Assert ((Get-ReminderText $slot) -ceq $expected) 'Reminder text must match its own hourly slot'
+    Assert ((Get-NextReminder $settings $slot.AddSeconds(-1)) -eq $slot) 'Next reminder must match actual next slot'
+}
+Assert ($null -eq (Get-NextReminder $settings ([datetime]'2026-11-10T02:00:00'))) 'No future reminder after closing'
+Assert ($null -eq (Get-DueReminder $settings ([datetime]'2026-11-10T01:59:00') ([datetime]'2026-11-10T14:00:00') '')) 'Do not show an old closing reminder in the afternoon'
+Assert ((Get-DueReminder $settings ([datetime]'2026-11-09T12:00:00') ([datetime]'2026-11-09T15:40:00') '').Hour -eq 15) 'Resuming must use current hour only'
 $smoke = Join-Path $PSScriptRoot ('qa-' + [guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $smoke
 Copy-Item -Path (Join-Path $source '*') -Destination $smoke
@@ -175,7 +185,17 @@ function Capture($name) {
 $entryRows.WD.CashRadio.Checked = $true; $entryRows.JD.CardRadio.Checked = $true; $entryRows.SD.SplitRadio.Checked = $true; $entryRows.Cinema.CashRadio.Checked = $true
 if ($grid.GetColumn($entryRows.Shop.Cash) -ne 4 -or $grid.GetColumn($entryRows.Shop.Card) -ne 5) { throw 'Shop payment columns incorrect' }; if ($entryRows.WD.Packs.Parent -ne $grid -or $entryRows.JD.Count.Parent -ne $grid) { throw 'Quantity inputs outside grid' }; Capture 'vendas.png'
 $script:lastCheck = [datetime]'2026-11-10T01:59:59'
+foreach($time in @('2026-11-09T14:00:00','2026-11-09T23:00:00','2026-11-10T00:00:00','2026-11-10T01:00:00')) {
+    $now=[datetime]$time; $script:lastCheck=$now.AddSeconds(-1); $script:state.LastReminder=''
+    Check-Reminder $now
+    $expected=$now.ToString('HH:mm') + ' — Enviar relatório'
+    if($tray.BalloonTipTitle -cne $expected -or -not $status.Text.StartsWith($expected) -or $status.Text.Contains('fechamento')){throw 'Hourly notification has wrong text/time'}
+    if($tray.BalloonTipText -ne 'O relatório está pronto. Enviar relatório.'){throw 'Notification body must be concise without automatic-send disclaimer'}
+    Acknowledge-Reminder
+}
+$script:lastCheck = [datetime]'2026-11-10T01:59:59'
 Check-Reminder ([datetime]'2026-11-10T02:00:00')
+if($tray.BalloonTipTitle -cne '02:00 — Enviar relatório de fechamento'){throw 'Closing notification must be exclusive to 02:00'}
 if ($tabs.SelectedTab -ne $closingTab -or $script:state.LastReminder -ne '2026-11-10T02:00:00' -or -not $script:reminderPending) { throw 'Closing notification failed' }
 Acknowledge-Reminder
 if ($script:reminderPending) { throw 'Notification acknowledgement failed' }
