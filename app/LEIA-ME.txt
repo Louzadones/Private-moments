@@ -1,4 +1,12 @@
-﻿O X esconde a janela SILENCIOSAMENTE, sem aviso de minimização.
+﻿PRIVATE MOMENTS V11 — IDENTIDADE VINHO E ROSA
+
+Logo P com beijo escolhida pelo usuário, com fundo uniforme em #590027
+e P rosa #F7A6CE. A paleta foi aplicada aos menus, cabeçalho, grade, abas,
+botões e realces. A marca aparece no executável, janela e ícones ocultos.
+Mantenha a pasta assets junto dos arquivos do app. Extraia todo o ZIP.
+As vendas, preços, relatórios e lembretes continuam com as regras definidas.
+
+O X esconde a janela SILENCIOSAMENTE, sem aviso de minimização.
 
 PRIVATE MOMENTS V10 — HORÁRIO CORRETO NOS ALERTAS
 Cada notificação mostra sua hora: 14:00 — Enviar relatório;

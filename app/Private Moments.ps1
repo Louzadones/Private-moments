@@ -1,9 +1,32 @@
 ﻿$ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
-Add-Type -WarningAction SilentlyContinue -ReferencedAssemblies System.Windows.Forms -TypeDefinition @"
+Add-Type -WarningAction SilentlyContinue -ReferencedAssemblies @('System.Windows.Forms','System.Drawing') -TypeDefinition @"
 using System;
 using System.Windows.Forms;
+using System.Drawing;
+public class BrandColors : ProfessionalColorTable {
+ public override Color MenuStripGradientBegin {get{return ColorTranslator.FromHtml("#590027");}}
+ public override Color MenuStripGradientEnd {get{return MenuStripGradientBegin;}}
+ public override Color ToolStripDropDownBackground {get{return MenuStripGradientBegin;}}
+ public override Color ImageMarginGradientBegin {get{return MenuStripGradientBegin;}}
+ public override Color ImageMarginGradientMiddle {get{return MenuStripGradientBegin;}}
+ public override Color ImageMarginGradientEnd {get{return MenuStripGradientBegin;}}
+ public override Color MenuItemSelected {get{return ColorTranslator.FromHtml("#F7A6CE");}}
+ public override Color MenuItemSelectedGradientBegin {get{return MenuItemSelected;}}
+ public override Color MenuItemSelectedGradientEnd {get{return MenuItemSelected;}}
+ public override Color MenuItemPressedGradientBegin {get{return MenuItemSelected;}}
+ public override Color MenuItemPressedGradientMiddle {get{return MenuItemSelected;}}
+ public override Color MenuItemPressedGradientEnd {get{return MenuItemSelected;}}
+ public override Color MenuBorder {get{return ColorTranslator.FromHtml("#C8739A");}}
+ public override Color MenuItemBorder {get{return MenuBorder;}}
+}
+public class BrandMenuRenderer : ToolStripProfessionalRenderer {
+ public BrandMenuRenderer() : base(new BrandColors()) {}
+ protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e) {
+  e.TextColor=ColorTranslator.FromHtml(e.Item.Selected ? "#590027" : "#F7A6CE"); base.OnRenderItemText(e);
+ }
+}
 public class EmptyNumberBox : NumericUpDown {
  protected override void UpdateEditText() { base.UpdateEditText(); if (Text == "0") Text = String.Empty; }
  protected override void OnEnter(EventArgs e) { base.OnEnter(e); Select(0, Text.Length); }
@@ -26,6 +49,10 @@ public class TrayForm : Form {
 }
 "@
 [Windows.Forms.Application]::EnableVisualStyles()
+$script:Theme=@{}
+foreach($entry in @{Wine='#590027';Pink='#F7A6CE';Canvas='#FFF3F8';Surface='#FFFBFD';Text='#3B1026';Muted='#76445C';Line='#C8739A';Error='#A31B46';Disabled='#EAD2DE';Hover='#79073C'}.GetEnumerator()){
+    $script:Theme[$entry.Key]=[Drawing.ColorTranslator]::FromHtml($entry.Value)
+}
 . (Join-Path $PSScriptRoot 'Core.ps1')
 $dataPath = Join-Path $PSScriptRoot 'dados.json'
 $backupPath = Join-Path $PSScriptRoot 'dados.backup.json'
@@ -80,21 +107,25 @@ function Label($Parent, $Text, $X, $Y, $W, $Size = 10, $H = 26) {
 }
 function Button($Parent, $Text, $X, $Y, $W, [scriptblock]$Action) {
     $o = New-Object Windows.Forms.Button; $o.Text = $Text; $o.SetBounds($X, $Y, $W, 36)
-    $o.FlatStyle = 'Flat'; $o.BackColor = [Drawing.Color]::White; $o.Add_Click($Action)
+    $o.FlatStyle = 'Flat'; $o.BackColor = $Theme.Surface; $o.ForeColor=$Theme.Wine
+    $o.FlatAppearance.BorderColor=$Theme.Line; $o.FlatAppearance.MouseOverBackColor=$Theme.Pink; $o.Add_Click($Action)
     $Parent.Controls.Add($o); return $o
 }
 function Textbox($Parent, $X, $Y, $W) {
-    $o = New-Object Windows.Forms.TextBox; $o.SetBounds($X, $Y, $W, 27); $Parent.Controls.Add($o); return $o
+    $o = New-Object Windows.Forms.TextBox; $o.SetBounds($X, $Y, $W, 27); $o.BackColor=$Theme.Surface; $o.ForeColor=$Theme.Text; $o.BorderStyle='FixedSingle'
+    $o.Add_Enter({param($sender,$e) $sender.BackColor=$Theme.Pink}); $o.Add_Leave({param($sender,$e) $sender.BackColor=$Theme.Surface})
+    $Parent.Controls.Add($o); return $o
 }
 function Numberbox($Parent, $X, $Y, $W, $Max = 100000) {
-    $o = New-Object EmptyNumberBox; $o.Minimum = 0; $o.Maximum = $Max; $o.SetBounds($X, $Y, $W, 27); $o.Text = ''
+    $o = New-Object EmptyNumberBox; $o.Minimum = 0; $o.Maximum = $Max; $o.SetBounds($X, $Y, $W, 27); $o.Text = ''; $o.BackColor=$Theme.Surface; $o.ForeColor=$Theme.Text; $o.BorderStyle='FixedSingle'
+    $o.Add_Enter({param($sender,$e) $sender.BackColor=$Theme.Pink}); $o.Add_Leave({param($sender,$e) $sender.BackColor=$Theme.Surface})
     $Parent.Controls.Add($o); return $o
 }
 function Make-Group($Parent, $Text, $X, $Y, $W, $H) {
     $o = New-Object Windows.Forms.GroupBox; $o.Text = $Text; $o.SetBounds($X, $Y, $W, $H); $Parent.Controls.Add($o); return $o
 }
 function Radio($Parent, $Text, $X, $Y, $W) {
-    $o = New-Object ToggleRadioButton; $o.Text = $Text; $o.SetBounds($X, $Y, $W, 28); $Parent.Controls.Add($o); return $o
+    $o = New-Object ToggleRadioButton; $o.Text = $Text; $o.SetBounds($X, $Y, $W, 28); $o.ForeColor=$Theme.Wine; $o.FlatStyle='Flat'; $Parent.Controls.Add($o); return $o
 }
 function Reset-Entry {
     $script:editingId = $null; $add.Text = 'Registrar venda'; $cancel.Visible = $false
@@ -161,14 +192,14 @@ function Update-EntryFeedback {
                 }
             } elseif ($c -ne 'Shop' -and $r.SplitRadio.Checked -and ((Entry-Amount $r.Cash) + (Entry-Amount $r.Card)) -gt 0) { $problem = 'informe a quantidade vendida' }
         } catch { $problem = 'digite um valor válido, como 10,50' }
-        $r.Total.ForeColor = [Drawing.Color]::FromArgb(30,41,59)
-        if ($problem -ne '') { $issues += "${c}: $problem"; $r.Total.ForeColor = [Drawing.Color]::FromArgb(153,27,27) }
+        $r.Total.ForeColor = $Theme.Text
+        if ($problem -ne '') { $issues += "${c}: $problem"; $r.Total.ForeColor = $Theme.Error }
     }
     $add.Enabled = $hasItems -and $issues.Count -eq 0
-    if ($add.Enabled) { $add.BackColor=[Drawing.Color]::FromArgb(67,56,202); $add.ForeColor=[Drawing.Color]::White }
-    else { $add.BackColor=[Drawing.Color]::FromArgb(226,232,240); $add.ForeColor=[Drawing.Color]::FromArgb(71,85,105) }
-    $basketHint.ForeColor = [Drawing.Color]::FromArgb(71,85,105)
-    if ($issues.Count -gt 0) { $basketHint.Text = $issues[0]; $basketHint.ForeColor = [Drawing.Color]::FromArgb(153,27,27) }
+    if ($add.Enabled) { $add.BackColor=$Theme.Wine; $add.ForeColor=$Theme.Pink }
+    else { $add.BackColor=$Theme.Disabled; $add.ForeColor=$Theme.Muted }
+    $basketHint.ForeColor = $Theme.Muted
+    if ($issues.Count -gt 0) { $basketHint.Text = $issues[0]; $basketHint.ForeColor = $Theme.Error }
     elseif ($hasItems) { $basketHint.Text = 'Tudo conferido. Registre a venda para atualizar o turno.' }
     else { $basketHint.Text = 'Informe as quantidades ou o valor do Shop e escolha o pagamento.' }
 }
@@ -282,9 +313,13 @@ $form = New-Object TrayForm
 $form.Text = 'Private Moments | Vendas e fechamento'
 $form.ClientSize = New-Object Drawing.Size(1040, 690)
 $form.MinimumSize = $form.Size; $form.MaximumSize = $form.Size
-$form.StartPosition = 'CenterScreen'; $form.BackColor = [Drawing.Color]::FromArgb(245, 247, 250); $form.ForeColor = [Drawing.Color]::FromArgb(30,41,59)
+$form.StartPosition = 'CenterScreen'; $form.BackColor = $Theme.Canvas; $form.ForeColor = $Theme.Text
+$appIcon=New-Object Drawing.Icon((Join-Path $PSScriptRoot 'assets/app.ico'),32,32)
+$trayIcon=New-Object Drawing.Icon((Join-Path $PSScriptRoot 'assets/app.ico'),16,16)
+$form.Icon=$appIcon
 $form.AutoScaleMode = 'Dpi'; $form.Font = New-Object Drawing.Font('Segoe UI', 10)
 $menu = New-Object Windows.Forms.MenuStrip
+$menu.Renderer=New-Object BrandMenuRenderer; $menu.BackColor=$Theme.Wine; $menu.ForeColor=$Theme.Pink
 $shiftMenu = New-Object Windows.Forms.ToolStripMenuItem('Turno')
 $editShiftMenu = New-Object Windows.Forms.ToolStripMenuItem('Corrigir dados iniciais...')
 $editShiftMenu.Add_Click({ Run-Action { Show-Setup } })
@@ -292,9 +327,19 @@ $newShiftMenu = New-Object Windows.Forms.ToolStripMenuItem('Novo turno...')
 $newShiftMenu.Add_Click({ Run-Action { Start-NewShift } })
 $null = $shiftMenu.DropDownItems.Add($editShiftMenu); $null = $shiftMenu.DropDownItems.Add($newShiftMenu)
 $null = $menu.Items.Add($shiftMenu); $form.MainMenuStrip = $menu; $form.Controls.Add($menu)
-$null = Label $form 'Private Moments' 20 30 1000 20 38
-$subtitle = Label $form '' 22 70 1000 10
+$header=New-Object Windows.Forms.Panel; $header.SetBounds(0,24,1040,72); $header.BackColor=$Theme.Wine; $header.ForeColor=$Theme.Pink; $form.Controls.Add($header)
+$logoImage=[Drawing.Image]::FromFile((Join-Path $PSScriptRoot 'assets/logo.png'))
+$logoBox=New-Object Windows.Forms.PictureBox; $logoBox.SetBounds(20,8,48,48); $logoBox.Image=$logoImage; $logoBox.SizeMode='Zoom'; $header.Controls.Add($logoBox)
+$null = Label $header 'Private Moments' 80 0 940 20 38
+$subtitle = Label $header '' 82 44 936 10
 $tabs = New-Object Windows.Forms.TabControl; $tabs.SetBounds(20, 100, 1000, 513); $form.Controls.Add($tabs)
+$tabs.DrawMode='OwnerDrawFixed'; $tabs.Add_DrawItem({param($sender,$e)
+    $selected=$e.Index -eq $sender.SelectedIndex; $bg=$Theme.Wine; $fg=$Theme.Pink
+    if($selected){$bg=$Theme.Pink; $fg=$Theme.Wine}
+    $brush=New-Object Drawing.SolidBrush($bg)
+    try{$e.Graphics.FillRectangle($brush,$e.Bounds)}finally{$brush.Dispose()}
+    [Windows.Forms.TextRenderer]::DrawText($e.Graphics,$sender.TabPages[$e.Index].Text,$sender.Font,$e.Bounds,$fg,([Windows.Forms.TextFormatFlags]::HorizontalCenter -bor [Windows.Forms.TextFormatFlags]::VerticalCenter))
+})
 $salesTab = New-Object Windows.Forms.TabPage; $salesTab.Text = 'Vendas e relatório por hora'
 $setupTab = New-Object Windows.Forms.TabPage; $setupTab.Text = 'Início do turno'
 $closingTab = New-Object Windows.Forms.TabPage; $closingTab.Text = 'Fechamento detalhado'
@@ -302,14 +347,14 @@ foreach ($tab in @($setupTab, $salesTab, $closingTab)) { $tab.BackColor = $form.
 $totalsLabel = Label $salesTab '' 14 10 964 13 30
 $grid = New-Object Windows.Forms.TableLayoutPanel
 $grid.SetBounds(14,48,958,212); $grid.ColumnCount = 9; $grid.RowCount = 6
-$grid.CellBorderStyle = 'Single'; $grid.Margin = 0; $grid.Padding = 0
+$grid.CellBorderStyle = 'Single'; $grid.Margin = 0; $grid.Padding = 0; $grid.BackColor=$Theme.Canvas
 foreach ($w in @(90,105,125,100,120,120,100,95,93)) { $null = $grid.ColumnStyles.Add((New-Object Windows.Forms.ColumnStyle([Windows.Forms.SizeType]::Absolute, $w))) }
 $null = $grid.RowStyles.Add((New-Object Windows.Forms.RowStyle([Windows.Forms.SizeType]::Absolute, 34)))
 for ($i=1;$i -le 5;$i++) { $null = $grid.RowStyles.Add((New-Object Windows.Forms.RowStyle([Windows.Forms.SizeType]::Absolute,34))) }
 $salesTab.Controls.Add($grid)
 $headers = @('Categoria','Pacotes de 4','Avulsos / un.','Total (€)','Dinheiro','Cartão','Dividido',"Dinheiro (€)`ndividido", "Cartão (€)`ndividido")
 for ($i=0;$i -lt 9;$i++) {
- $h=Label $salesTab $headers[$i] 0 0 90 9 34; $h.TextAlign='MiddleCenter'; $h.Dock='Fill'; $h.Margin=0; $h.BackColor=[Drawing.Color]::FromArgb(224,224,235)
+ $h=Label $salesTab $headers[$i] 0 0 90 9 34; $h.TextAlign='MiddleCenter'; $h.Dock='Fill'; $h.Margin=0; $h.BackColor=$Theme.Wine; $h.ForeColor=$Theme.Pink
  $grid.Controls.Add($h,$i,0)
 }
 $entryRows=@{}; $row=1
@@ -323,7 +368,7 @@ foreach ($c in @('WD','JD','SD','Shop','Cinema')) {
  $cash=Textbox $salesTab 0 0 95; $card=Textbox $salesTab 0 0 95
  $panel=New-Object Windows.Forms.Panel; $panel.Dock='Fill'; $panel.Margin=0
  $cashRadio=Radio $panel '' 50 2 24; $cardRadio=Radio $panel '' 170 2 24; $splitRadio=Radio $panel '' 280 2 24
- $panel.Add_Paint({ param($sender,$e) $e.Graphics.DrawLine([Drawing.Pens]::Silver,120,0,120,$sender.Height); $e.Graphics.DrawLine([Drawing.Pens]::Silver,240,0,240,$sender.Height) })
+ $panel.Add_Paint({ param($sender,$e) $pen=New-Object Drawing.Pen($Theme.Line); try{$e.Graphics.DrawLine($pen,120,0,120,$sender.Height); $e.Graphics.DrawLine($pen,240,0,240,$sender.Height)}finally{$pen.Dispose()} })
  $grid.Controls.Add($panel,4,$row); $grid.SetColumnSpan($panel,3)
  foreach ($control in @($packs,$loose,$count,$total,$cash,$card)) { $control.Anchor='None'; $control.Margin=New-Object Windows.Forms.Padding(3) }
  $packs.Visible=$c -in @('WD','SD'); $loose.Visible=$c -in @('WD','SD'); $count.Visible=$c -in @('JD','Cinema')
@@ -345,11 +390,12 @@ foreach ($c in @('WD','JD','SD','Shop','Cinema')) {
 $basketTotal = Label $salesTab 'Total desta venda: €0' 14 264 580 12 30
 $basketHint = Label $salesTab '' 14 289 595 9 16
 $add = Button $salesTab 'Registrar venda' 634 264 150 { Run-Action { Register-Basket } }
-$add.BackColor = [Drawing.Color]::FromArgb(67,56,202); $add.ForeColor = [Drawing.Color]::White
-$add.FlatAppearance.BorderSize=0; $add.FlatAppearance.MouseOverBackColor=[Drawing.Color]::FromArgb(55,48,163)
+$add.BackColor = $Theme.Wine; $add.ForeColor = $Theme.Pink
+$add.FlatAppearance.BorderSize=0; $add.FlatAppearance.MouseOverBackColor=$Theme.Hover
 $cancel = Button $salesTab 'Cancelar correção' 800 264 160 { Reset-Entry }; $cancel.Visible = $false
 $list = New-Object Windows.Forms.ListView; $list.SetBounds(14, 306, 594, 126)
 $list.View = 'Details'; $list.FullRowSelect = $true; $list.MultiSelect = $false; $list.HideSelection = $false
+$list.BackColor=$Theme.Surface; $list.ForeColor=$Theme.Text
 foreach ($col in @(@('Hora', 74), @('Categoria', 78), @('Quantidade', 130), @('Dinheiro', 100), @('Cartão', 100), @('Total', 100))) { $null = $list.Columns.Add($col[0], $col[1]) }
 $salesTab.Controls.Add($list); $list.Add_DoubleClick({ Run-Action { Edit-Selected } })
 $report = Textbox $salesTab 626 306 346; $report.Height = 126; $report.Multiline = $true; $report.ReadOnly = $true
@@ -414,7 +460,7 @@ $form.Add_KeyDown({ param($sender,$e)
 $stockLabel = Label $closingTab '' 16 12 956 11 28
 $closingReport = Textbox $closingTab 16 48 956; $closingReport.Height = 382
 $closingReport.Multiline = $true; $closingReport.ReadOnly = $true; $closingReport.ScrollBars = 'Vertical'
-$closingReport.Font = New-Object Drawing.Font('Consolas', 10); $closingReport.BackColor = [Drawing.Color]::White
+$closingReport.Font = New-Object Drawing.Font('Consolas', 10); $closingReport.BackColor = $Theme.Surface
 $null = Button $closingTab 'Copiar fechamento' 16 442 225 { Run-Action { [Windows.Forms.Clipboard]::SetText((Get-ClosingReport $script:state)); $status.Text = 'Fechamento copiado com o texto do modelo.' } }
 $null = Button $closingTab 'WhatsApp: fechamento' 255 442 250 { Run-Action { Send-Report (Get-ClosingReport $script:state) } }
 $null = Button $closingTab 'Salvar fechamento .txt' 519 442 235 {
@@ -453,7 +499,7 @@ function Refresh-View {
     try { $closingReport.Text = Get-ClosingReport $script:state }
     catch { $closingReport.Text = 'Fechamento aguardando dados:' + "`r`n`r`n" + $_.Exception.Message }
 }
-$tray = New-Object Windows.Forms.NotifyIcon; $tray.Icon = [Drawing.SystemIcons]::Information
+$tray = New-Object Windows.Forms.NotifyIcon; $tray.Icon = $trayIcon
 $tray.Text = 'Private Moments — relatório por hora'; $tray.Visible = $true
 function Restore-App {
     $form.Show(); $form.WindowState = 'Normal'; $form.Activate()
@@ -466,6 +512,7 @@ function Request-Exit {
     if (-not $form.IsDisposed) { $script:allowExit = $false }
 }
 $trayMenu = New-Object Windows.Forms.ContextMenuStrip
+$trayMenu.Renderer=New-Object BrandMenuRenderer; $trayMenu.BackColor=$Theme.Wine; $trayMenu.ForeColor=$Theme.Pink
 $openTrayItem = New-Object Windows.Forms.ToolStripMenuItem('Abrir Private Moments')
 $openTrayItem.Add_Click({ Restore-App })
 $exitTrayItem = New-Object Windows.Forms.ToolStripMenuItem('Sair do aplicativo')
@@ -535,5 +582,5 @@ try {
     [Windows.Forms.MessageBox]::Show($_.Exception.Message, 'Erro no aplicativo') | Out-Null
 } finally {
     $script:uiReady = $false; $timer.Stop(); $timer.Dispose(); $tray.Visible = $false; $tray.Dispose()
-    $trayMenu.Dispose(); $tooltips.Dispose(); $form.Dispose(); $mutex.ReleaseMutex(); $mutex.Dispose()
+    $trayMenu.Dispose(); $tooltips.Dispose(); $form.Dispose(); $logoImage.Dispose(); $appIcon.Dispose(); $trayIcon.Dispose(); $mutex.ReleaseMutex(); $mutex.Dispose()
 }

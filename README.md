@@ -4,7 +4,7 @@ Aplicativo para Windows que registra vendas, controla estoque e prepara os relat
 
 ## Usar
 
-Baixe [Private-Moments-V10.zip](releases/Private-Moments-V10.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Só a janela do aplicativo aparece.
+Baixe [Private-Moments-V11.zip](releases/Private-Moments-V11.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Mantenha a pasta `assets` junto ao aplicativo. Só a janela do aplicativo aparece.
 
 Requer Windows com Windows PowerShell 5.1 e .NET Framework 4.x. Não requer Python, Excel ou instalação de pacotes.
 
@@ -41,8 +41,12 @@ Para atualizar mantendo o turno, feche a versão anterior e copie seu `dados.jso
 
 ## Desenvolvimento
 
+A identidade visual usa o P com beijo escolhido pelo usuário, vinho `#590027` e rosa `#F7A6CE`. O fundo da logo foi finalizado por código para ter cor uniforme. A marca aparece no executável, janela, cabeçalho e ícone de notificação. A interface usa essa paleta com superfícies claras para leitura. Os controles do sistema operacional mantêm suas convenções de plataforma.
+
 - `app/`: aplicativo e regras de negócio em PowerShell/Windows Forms.
 - `src/Launcher.cs`: código do executável que inicia o aplicativo sem console.
+- `src/LogoAssets.cs` e `src/Build-Logo.ps1`: finalização da logo em duas cores e geração de ICO com tamanhos de 16 a 256 pixels. Execute `src/Build-Logo.ps1` no Windows PowerShell para regenerar a partir de `src/logo-reference.png`.
+- `app/assets/`: logo PNG e ícone ICO usados na interface e incorporados ao executável.
 - `tests/Verify.ps1`: cálculos, estoque, pagamentos, relatórios, lembretes e interação com a interface, usando dados sintéticos em pastas isoladas.
 - `docs/UX.md`: avaliação e mudanças orientadas pelas skills solicitadas.
 
