@@ -1,0 +1,13 @@
+# Dados pessoais e financeiros gerados em execução
+dados.json*
+dados.backup.json
+turnos/
+*.tmp
+*.log
+# Saídas de testes e ferramentas locais
+tests/qa-*/
+tests/v*-smoke-*/
+.test-output/
+.vs/
+Thumbs.db
+Desktop.ini

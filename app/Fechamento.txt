@@ -1,0 +1,45 @@
+PRIVATE MOMENTS
+DATE.. {{DATE}}
+DAY..  {{DAY}}
+Time. 11.AM .TO .2.AM
+WD:{{INITIAL_WD}}
+JD:{{INITIAL_JD}}
+SD:{{INITIAL_SD}}
+.....................................
+Shop..cash …€.{{SHOP_CASH}}
+Shop..VISA…..€.{{SHOP_CARD}}
+.....................................
+=€.{{SHOP_TOTAL}}
+.....................................
+Cinema..cash..€.{{CINEMA_CASH}}
+Cinema..VISA….€.{{CINEMA_CARD}}
+.....................................
+=€.{{CINEMA_TOTAL}}
+..................................... 
+WD..cash ….€.{{WD_CASH}}
+WD..VISA…€.{{WD_CARD}}
+=.€.{{WD_TOTAL}}
+.....................................
+JD..CASH..€.{{JD_CASH}}
+JD..VISA..€.{{JD_CARD}}
+=.€.{{JD_TOTAL}}
+.....................................
+SD..CASH..€.{{SD_CASH}}
+SD..VISA..€.{{SD_CARD}}
+=.€.{{SD_TOTAL}}
+.....................................
+Total…€.{{PRODUCTS_TOTAL}}
+.....................................
+Overall  total.CASH€.{{CASH}}
+Overall total VISA €.{{CARD}}
+.....................................
+=€.{{GRAND_TOTAL}}
+.....................................
+WD.{{FINAL_WD}}
+JD.{{FINAL_JD}}
+SD.{{FINAL_SD}}
+.....................................
+By.. {{NAME}} 11.AM to 02.AM
+FLOAT .€150
+IN THE CASH REGISTER 
+.....................................

@@ -1,0 +1,8 @@
+* text=auto
+*.ps1 text eol=crlf
+*.cs text eol=crlf
+*.exe -text
+*.zip -text
+# Espaços literais fazem parte do modelo exigido e do teste de igualdade.
+app/Fechamento.txt text eol=crlf whitespace=-blank-at-eol
+tests/Verify.ps1 text eol=crlf whitespace=-blank-at-eol

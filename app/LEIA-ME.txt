@@ -1,0 +1,91 @@
+﻿PRIVATE MOMENTS V7 — MELHORIAS DE UX
+
+O botão Registrar venda destaca a ação principal e só é liberado quando
+a venda está válida. A mensagem abaixo do total explica pagamentos que
+faltam ou excedem o total. Ctrl+Enter registra; Esc cancela correção.
+Passe o mouse nos campos para consultar preços e instruções.
+
+PRIVATE MOMENTS V6 — AJUSTES DE NAVEGAÇÃO E GRADE
+
+Tab no estoque: WD pacotes > WD avulsos > JD > SD pacotes > SD avulsos.
+Vendas em grade: cada categoria tem uma linha. Dinheiro, Cartão e Dividido
+aparecem só nos títulos das colunas; as bolinhas ficam nas células abaixo.
+O Shop usa as mesmas colunas de Dinheiro e Cartão para digitar os valores.
+Os campos extras de divisão aparecem à direita quando escolher Dividido.
+
+PRIVATE MOMENTS — V6
+
+ABRIR E ATUALIZAR
+Extraia todos os arquivos e abra Private Moments.exe. Não é necessário
+manter uma janela de terminal. Os demais arquivos devem permanecer juntos.
+Para continuar um turno da versão anterior, feche a versão anterior e copie
+o dados.json para a pasta nova ANTES de abrir a V6. Não sobrescreva dados de
+outro turno. As vendas anteriores mantêm seus valores históricos.
+Requer Windows, Windows PowerShell 5.1 e .NET Framework 4.x.
+
+INÍCIO DO TURNO
+Informe data, responsável, estoques iniciais de WD/SD (pacotes e avulsos) e
+JD (unidades). Salve. A primeira aba desaparece. Para corrigir, use o menu
+Turno > Corrigir dados iniciais. Novo turno arquiva o atual e reinicia tudo.
+Horário do modelo: 11.AM a 02.AM. FLOAT fixo: €150.
+
+UMA VENDA, VÁRIAS CATEGORIAS
+Preencha somente as linhas vendidas. Uma venda pode conter as cinco linhas:
+- WD: pacotes de 4 a €50; comprimidos avulsos a €15 cada.
+- SD: pacotes de 4 a €60; comprimidos avulsos a €20 cada.
+- JD: unidades. Calcula a combinação mais barata de 1 por €20, 4 por €55
+  e 7 por €90. Ex.: 5 por €75; 8 por €110.
+- Cinema: quantidade de entradas a €18 cada.
+- Shop: digite diretamente os valores em dinheiro e/ou cartão. O total é a soma dos dois campos.
+Para WD/SD, pacotes e avulsos são campos separados e podem ser usados juntos.
+O preço dos avulsos é individual; para aplicar preço de pacote, preencha
+o campo Pacotes de 4. JD aplica os combos automaticamente.
+
+PAGAMENTO E CAMPOS VAZIOS
+WD, JD, SD e Cinema: escolha pela bolinha Dinheiro ou Cartão. O valor inteiro
+calculado pela quantidade entra no pagamento escolhido automaticamente.
+Só quando houver pagamento misto escolha Dividido; aparecerão os campos
+Dinheiro e Cartão. Preencha as partes, cuja soma deve bater com o total.
+Shop tem apenas dinheiro/cartão para digitar; não há campo de preço extra.
+Todos os campos de quantidade zerados aparecem VAZIOS, inclusive no início
+do turno. Clique e digite o número. Campo vazio equivale a zero.
+Depois de registrar, valores e seleções são limpos para a próxima venda.
+A ordem no início do turno é WD, JD e SD; nas vendas é WD, JD, SD, Shop,
+Cinema. O estoque inicial continua no menu Turno após salvar a primeira vez.
+
+CORRIGIR
+O histórico mostra uma linha por categoria. Selecione uma linha para editar
+ou excluir. Excluir devolve a quantidade ao estoque. Ao editar uma venda
+antiga, os preços fixos atuais serão aplicados ao salvar; confira o pagamento.
+Os valores antigos não são recalculados apenas ao abrir a nova versão.
+
+RELATÓRIOS
+O relatório por hora mantém o formato curto: WD soma WD + JD + SD, seguido
+de Shop, Cinema e TOTAL. O pagamento dividido não altera o total vendido.
+O fechamento mantém o texto do modelo, com dinheiro em CASH/cash e cartão
+em VISA, separado por categoria. Mostra estoques iniciais e finais.
+WD/SD: 59-2 significa 59 pacotes e 2 comprimidos. JD é contado por unidade.
+O FLOAT não é somado às vendas.
+Os botões WhatsApp preparam a mensagem. Escolha a conversa e confirme o envio.
+Não há envio automático e o aplicativo não confirma recebimento.
+
+LEMBRETES E RELÓGIO DO PC
+O relógio visível acompanha a data e hora locais do computador.
+Os lembretes seguem a data de início cadastrada no turno:
+12:00, 13:00, ... 23:00, 00:00 e 01:00; às 02:00 há aviso de fechamento.
+Depois de 02:00 não há outros lembretes para aquele turno.
+O aplicativo solicita que o botão na barra de tarefas pisque e mostra um
+aviso. Às 02:00 seleciona a aba Fechamento. Ao ativar a janela ou preparar
+o relatório por hora, o aviso da barra é reconhecido.
+O horário é verificado a cada meio segundo, sem acumular atrasos por soma
+de intervalos. A apresentação visual e pequenos atrasos dependem do Windows.
+É necessário manter o app aberto e o PC ligado e ativo. Não pode avisar no
+horário exato com o PC desligado/em suspensão ou o aplicativo fechado.
+Ao retomar de suspensão com o app ainda aberto, avisa o último horário
+atravessado. Reabrir o aplicativo não dispara todos os avisos passados.
+Não altere a data do PC; corrija a data de início no menu se cadastrou errado.
+
+DADOS
+dados.json contém as vendas; dados.backup.json é a cópia anterior.
+Turnos anteriores são arquivados na pasta turnos. Não há sincronização
+entre computadores. Mantenha apenas uma janela do aplicativo aberta.
