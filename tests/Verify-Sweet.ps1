@@ -67,6 +67,20 @@ IN THE CASH REGISTER
 '@
 $actual = Get-ClosingReport $s
 Assert ($actual.Replace("`r`n", "`n") -ceq $expected.Replace("`r`n", "`n")) 'Exact closing template mismatch'
+$legacyNight=New-State
+$legacyNight.Started='2026-11-10T00:17:47+00:00'
+$legacyNight.Settings.Ready=$true; $legacyNight.Settings.Date='2026-11-10'
+$legacyNight.Settings.PSObject.Properties.Remove('DateBasisVersion')
+$nightReport=Get-ClosingReport $legacyNight
+Assert ($nightReport.Contains('DATE.. 09 NOVEMBER 2026') -and $nightReport.Contains('DAY..  MONDAY')) 'After-midnight legacy closing must keep Monday opening date'
+$legacyNight=Upgrade-State $legacyNight
+Assert ($legacyNight.Settings.Date -eq '2026-11-09') 'Legacy opening date must be corrected on load'
+$legacyNight=Upgrade-State $legacyNight
+Assert ($legacyNight.Settings.Date -eq '2026-11-09') 'Opening date must not move back again on reopen'
+$reloadedNight=Upgrade-State (($legacyNight | ConvertTo-Json -Depth 8) | ConvertFrom-Json)
+Assert ((Get-ClosingReport $reloadedNight).Contains('DAY..  MONDAY')) 'Closing date must remain fixed after persistence/reopen'
+$explicitDate=New-State; $explicitDate.Started='2026-11-10T00:17:47+00:00'; $explicitDate.Settings.Date='2026-11-10'
+Assert ((Get-ShiftOpeningDate $explicitDate).ToString('yyyy-MM-dd') -eq '2026-11-10') 'Do not override an explicitly saved current-format opening date'
 Assert ((Get-Report $s.Sales).EndsWith('TOTAL:  €292')) 'Hourly report'
 $s.Sales += (Sale 'JD' 'Card' 500 1); $s.Sales += (Sale 'SD' 'Cash' 200 1)
 $t = Get-Totals $s.Sales; $b = Get-Breakdown $s.Sales; $r = Get-RemainingStock $s

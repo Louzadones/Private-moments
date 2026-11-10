@@ -17,7 +17,7 @@ function New-ShiftSettings([datetime]$Now = (Get-Date)) {
     $shiftDay=$Now.Date
     if($Now.Hour -lt 3){$shiftDay=$shiftDay.AddDays(-1)}
     return [pscustomobject]@{
-        Ready = $false; Date = $shiftDay.ToString('yyyy-MM-dd'); Name = 'Renan'
+        Ready = $false; Date = $shiftDay.ToString('yyyy-MM-dd'); DateBasisVersion = 1; Name = 'Renan'
         StartTime = '11.AM'; EndTime = '02.AM'; Float = [long]15000
         Stock = [pscustomobject]@{ WD = 0; JD = 0; SD = 0 }
     }
@@ -30,7 +30,7 @@ function Get-ClosingReport($State) {
     Assert-ClosingReady $State
     $b = Get-Breakdown $State.Sales; $t = Get-Totals $State.Sales
     $stock = Get-RemainingStock $State
-    $date = [datetime]::ParseExact($State.Settings.Date, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    $date = Get-ShiftOpeningDate $State
     $tokens = @{
         DATE = $date.ToString('dd MMMM yyyy', [Globalization.CultureInfo]::GetCultureInfo('en-GB')).ToUpperInvariant()
         DAY = $date.ToString('dddd', [Globalization.CultureInfo]::GetCultureInfo('en-GB')).ToUpperInvariant()
@@ -52,6 +52,16 @@ function Get-ClosingReport($State) {
         if (-not $tokens.ContainsKey($key)) { throw "Campo desconhecido no modelo: $key" }
         return [string]$tokens[$key]
     }).Replace("`r`n", "`n").Replace("`n", "`r`n")
+}
+function Get-ShiftOpeningDate($State) {
+    $date=[datetime]::ParseExact($State.Settings.Date,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+    # Older versions saved the calendar date when a shift was first entered after midnight.
+    # Convert that legacy date once, then keep the explicitly saved opening date fixed.
+    if($State.Settings.DateBasisVersion -ne 1 -and $State.Started){
+        $started=[datetimeoffset]::Parse($State.Started,[Globalization.CultureInfo]::InvariantCulture).DateTime
+        if($started.Hour -lt 3 -and $date.Date -eq $started.Date){$date=$date.AddDays(-1)}
+    }
+    return $date
 }
 function New-State {
     return [pscustomobject]@{ Version = 2; LastReminder = ''; Started = (Get-Date).ToString('o'); Phone = ''; Settings = (New-ShiftSettings); Sales = @() }
@@ -165,6 +175,10 @@ function Upgrade-State($State) {
         $State.Version = 2
     }
     if ($State.Version -ne 2 -or $null -eq $State.Sales -or $null -eq $State.Settings -or $null -eq $State.Started) { throw 'Formato de dados desconhecido.' }
+    $State.Settings.Date=(Get-ShiftOpeningDate $State).ToString('yyyy-MM-dd')
+    if($null -eq $State.Settings.PSObject.Properties['DateBasisVersion']){
+        $State.Settings | Add-Member -NotePropertyName DateBasisVersion -NotePropertyValue 1
+    }else{$State.Settings.DateBasisVersion=1}
     $null = Get-Totals $State.Sales; $null = Get-Breakdown $State.Sales
     return $State
 }

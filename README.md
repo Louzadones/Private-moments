@@ -4,9 +4,9 @@ Aplicativo para Windows que registra vendas, controla estoque e prepara os relat
 
 ## Usar
 
-Baixe [Private-Moments-V13.zip](releases/Private-Moments-V13.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Mantenha a pasta `assets` junto ao aplicativo. Só a janela do aplicativo aparece.
+Baixe [Private-Moments-V14.zip](releases/Private-Moments-V14.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Mantenha a pasta `assets` junto ao aplicativo. Só a janela do aplicativo aparece.
 
-A segunda loja tem seu próprio pacote: [Sweet-Sensation-V1.zip](releases/Sweet-Sensation-V1.zip). Extraia em outra pasta e abra **Sweet Sensation.exe**. Ela tem logo S, nome e relatórios próprios. As duas versões podem funcionar ao mesmo tempo, cada uma com seus arquivos de vendas, estoque e turnos. Não misture os arquivos `dados.json` das lojas.
+A segunda loja tem seu próprio pacote: [Sweet-Sensation-V2.zip](releases/Sweet-Sensation-V2.zip). Extraia em outra pasta e abra **Sweet Sensation.exe**. Ela tem logo S, nome e relatórios próprios. As duas versões podem funcionar ao mesmo tempo, cada uma com seus arquivos de vendas, estoque e turnos. Não misture os arquivos `dados.json` das lojas.
 
 Requer Windows com Windows PowerShell 5.1 e .NET Framework 4.x. Não requer Python, Excel ou instalação de pacotes.
 
@@ -29,7 +29,7 @@ O relógio segue o PC. Com o aplicativo aberto, os lembretes vão das 12:00 às 
 
 Cada aviso mostra o próprio horário: “14:00 — Enviar relatório”, “00:00 — Enviar relatório” e, exclusivamente às 02:00, “02:00 — Enviar relatório de fechamento”. O rodapé mostra o próximo alerta. Ao retomar após uma pausa, só há aviso se existir um horário programado na hora atual; um fechamento antigo não reaparece à tarde.
 
-Na V13, iniciar um turno entre 00:00 e 02:59 sugere a data de abertura do dia anterior. Dados existentes com a data de hoje cadastrada de madrugada recebem os avisos de 01:00/02:00 na madrugada atual, sem alterar a data salva no relatório. Reabrir o app durante uma hora programada emite o aviso pendente daquela hora uma vez, respeitando o último horário já avisado.
+Iniciar um turno entre 00:00 e 02:59 sugere a data de abertura do dia anterior. O fechamento usa essa data fixa para DATE e DAY, inclusive depois da meia-noite. A V14 corrige uma vez os dados antigos que gravaram o novo dia ao cadastrar o turno de madrugada, sem alterar vendas ou estoques. Datas explicitamente salvas no formato atual continuam sendo respeitadas. Reabrir o app durante uma hora programada emite o aviso pendente daquela hora uma vez, respeitando o último horário já avisado.
 
 O WhatsApp abre a mensagem pronta. Você escolhe a conversa e confirma o envio; não há envio automático nem confirmação de recebimento.
 

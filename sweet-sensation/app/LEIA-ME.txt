@@ -1,4 +1,4 @@
-SWEET SENSATION — V1
+SWEET SENSATION — V2
 
 Extraia TODOS os arquivos do ZIP para uma pasta própria e abra Sweet Sensation.exe.
 Mantenha a pasta assets junto dos arquivos. Requer Windows, Windows PowerShell 5.1
@@ -10,6 +10,9 @@ WD e SD: pacotes de 4 e comprimidos avulsos. JD: unidades.
 Campos zerados aparecem vazios. Após salvar, a aba inicial fica no menu
 Turno > Corrigir dados iniciais. Horário fixo: 11.AM a 02.AM; FLOAT: €150.
 Depois da meia-noite, a data inicial sugerida é o dia anterior até 02:59.
+O fechamento mantém a data e o dia da semana de abertura do turno.
+Exemplo: segunda até terça 02:00 -> MONDAY e a data de segunda.
+Cadastros antigos de madrugada são corrigidos uma vez ao abrir.
 
 VENDAS
 WD: pacote de 4 por €50; avulso por €15.

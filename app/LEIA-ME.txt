@@ -1,4 +1,10 @@
-﻿PRIVATE MOMENTS V13 — CORREÇÃO DO AVISO DE 01:00
+﻿PRIVATE MOMENTS V14 — FECHAMENTO COM DATA DO INÍCIO DO TURNO
+DATE e DAY usam a data de abertura, inclusive depois da meia-noite.
+Exemplo: segunda até terça 02:00 -> data de segunda e MONDAY.
+Dados antigos cadastrados de madrugada são corrigidos uma vez ao abrir.
+Vendas e estoques são mantidos. Use Sair do aplicativo e reabra para ativar.
+
+PRIVATE MOMENTS V13 — CORREÇÃO DO AVISO DE 01:00
 
 Turnos iniciados depois da meia-noite sugerem a data anterior até 02:59.
 Se a data de hoje já foi cadastrada de madrugada, o alarme de 01:00/02:00
