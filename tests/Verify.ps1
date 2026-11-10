@@ -67,13 +67,13 @@ IN THE CASH REGISTER
 '@
 $actual = Get-ClosingReport $s
 Assert ($actual.Replace("`r`n", "`n") -ceq $expected.Replace("`r`n", "`n")) 'Exact closing template mismatch'
-Assert ((Get-Report $s.Sales).EndsWith('TOTAL: €292')) 'Hourly report'
+Assert ((Get-Report $s.Sales).EndsWith('TOTAL:  €292')) 'Hourly report'
 $s.Sales += (Sale 'JD' 'Card' 500 1); $s.Sales += (Sale 'SD' 'Cash' 200 1)
 $t = Get-Totals $s.Sales; $b = Get-Breakdown $s.Sales; $r = Get-RemainingStock $s
 Assert ($b.Cash -eq 18700 -and $b.Card -eq 11200) 'Cash/card split'
 Assert ($r.JD -eq 41 -and $r.SD -eq 11 -and $r.WD -eq 232) 'Stock subtraction'
 Assert ((Get-Report $s.Sales).Contains('WD: €87')) 'WD includes JD/SD revenue'
-Assert ((Get-Report $s.Sales).EndsWith('TOTAL: €299')) 'All category total'
+Assert ((Get-Report $s.Sales).EndsWith('TOTAL:  €299')) 'All category total'
 Assert ((Get-ClosingReport $s).Contains('SD.2-3')) 'SD package/loose normalization'
 $s.Sales = @($s.Sales | Where-Object { $_.Category -ne 'SD' })
 Assert ((Get-RemainingStock $s).SD -eq 12) 'Deletion restores inventory'
@@ -172,7 +172,7 @@ if ($b.Cash -ne 13000 -or $b.Card -ne 13650) { throw 'Split payment totals incor
 $remaining = Get-RemainingStock $script:state
 if ($remaining.WD -ne 233 -or $remaining.SD -ne 7 -or $remaining.JD -ne 37) { throw 'Multi-category stock incorrect' }
 if ($entryRows.WD.Packs.Text -ne '' -or $entryRows.WD.CashRadio.Checked -or $entryRows.WD.SplitRadio.Checked -or $entryRows.WD.Cash.Text -ne '') { throw 'Sale not cleared' }
-if ($report.Text -notmatch 'WD: €220' -or $report.Text -notmatch 'TOTAL: €266.5') { throw 'Hourly report totals incorrect' }
+if ($report.Text -notmatch 'WD: €220' -or $report.Text -notmatch 'TOTAL:  €266.5') { throw 'Hourly report totals incorrect' }
 if (-not $closingReport.Text.Contains('WD..cash ….€.20') -or -not $closingReport.Text.Contains('SD..VISA..€.50')) { throw 'Closing breakdown incorrect' }
 # Invalid mixed payment must reject the entire basket without changing inventory.
 $entryRows.WD.Loose.Value = 1; $entryRows.WD.SplitRadio.Checked = $true; $entryRows.WD.Cash.Text = '14'

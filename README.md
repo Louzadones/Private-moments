@@ -4,7 +4,7 @@ Aplicativo para Windows que registra vendas, controla estoque e prepara os relat
 
 ## Usar
 
-Baixe [Private-Moments-V11.zip](releases/Private-Moments-V11.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Mantenha a pasta `assets` junto ao aplicativo. Só a janela do aplicativo aparece.
+Baixe [Private-Moments-V12.zip](releases/Private-Moments-V12.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Mantenha a pasta `assets` junto ao aplicativo. Só a janela do aplicativo aparece.
 
 Requer Windows com Windows PowerShell 5.1 e .NET Framework 4.x. Não requer Python, Excel ou instalação de pacotes.
 

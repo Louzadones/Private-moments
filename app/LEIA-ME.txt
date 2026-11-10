@@ -1,4 +1,8 @@
-﻿PRIVATE MOMENTS V11 — IDENTIDADE VINHO E ROSA
+﻿PRIVATE MOMENTS V12 — RELATÓRIO POR HORA COMPACTO
+O relatório por hora sai em cinco linhas seguidas, sem linhas em branco,
+com dois espaços depois de TOTAL:. O fechamento mantém seu modelo.
+
+PRIVATE MOMENTS V11 — IDENTIDADE VINHO E ROSA
 
 Logo P com beijo escolhida pelo usuário, com fundo uniforme em #590027
 e P rosa #F7A6CE. A paleta foi aplicada aos menus, cabeçalho, grade, abas,

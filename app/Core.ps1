@@ -22,7 +22,7 @@ function New-ShiftSettings {
 }
 function Get-Report($Sales) {
     $t = Get-Totals $Sales
-    return "Private Moments`r`n`r`nWD: $(Format-Money ($t.WD + $t.JD + $t.SD))`r`n`r`nShop: $(Format-Money $t.Shop)`r`n`r`nCinema: $(Format-Money $t.Cinema)`r`n`r`nTOTAL: $(Format-Money ($t.WD + $t.JD + $t.SD + $t.Shop + $t.Cinema))"
+    return "Private Moments`r`nWD: $(Format-Money ($t.WD + $t.JD + $t.SD))`r`nShop: $(Format-Money $t.Shop)`r`nCinema: $(Format-Money $t.Cinema)`r`nTOTAL:  $(Format-Money ($t.WD + $t.JD + $t.SD + $t.Shop + $t.Cinema))"
 }
 function Get-ClosingReport($State) {
     Assert-ClosingReady $State
