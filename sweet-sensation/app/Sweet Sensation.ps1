@@ -252,7 +252,7 @@ function Hide-Setup {
 }
 function Load-Settings {
     $s = $script:state.Settings
-    $shiftDate.Value = [datetime]::ParseExact($s.Date, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    $shiftDate.Value = Get-ShiftCalendarDate $script:state
     $nameBox.Text = [string]$s.Name
     $wdPacks.Value = [math]::Floor([long]$s.Stock.WD / 4); $wdLoose.Value = [long]$s.Stock.WD % 4
     $jdCount.Value = [long]$s.Stock.JD
@@ -264,7 +264,13 @@ function Save-ShiftSettings {
     $stock = [pscustomobject]@{ WD = [long]($wdPacks.Value * 4 + $wdLoose.Value); JD = [long]$jdCount.Value; SD = [long]($sdPacks.Value * 4 + $sdLoose.Value) }
     $sold = Get-SoldQuantities $script:state.Sales
     foreach ($c in @('WD', 'JD', 'SD')) { if ($stock.$c -lt $sold[$c]) { throw "O estoque inicial de $c é menor que a quantidade já vendida." } }
-    $script:state.Settings.Date = $shiftDate.Value.ToString('yyyy-MM-dd')
+    $previousCalendar=Get-ShiftCalendarDate $script:state
+    if(-not $script:state.Settings.Ready -or $shiftDate.Value.Date -ne $previousCalendar.Date){
+        $script:state.Settings.Date = (Get-OpeningDateFromCalendar $shiftDate.Value (Get-Date)).ToString('yyyy-MM-dd')
+    }
+    if($null -eq $script:state.Settings.PSObject.Properties['CalendarDate']){
+        $script:state.Settings | Add-Member -NotePropertyName CalendarDate -NotePropertyValue $shiftDate.Value.ToString('yyyy-MM-dd')
+    }else{$script:state.Settings.CalendarDate=$shiftDate.Value.ToString('yyyy-MM-dd')}
     $script:state.Settings.Name = $name; $script:state.Settings.Stock = $stock; $script:state.Settings.Ready = $true
     Save-State; Refresh-View; Hide-Setup; Reset-Entry
     $status.Text = 'Dados do turno salvos. O estoque inicial não muda quando você registra vendas.'
@@ -280,7 +286,10 @@ function Edit-Selected {
         else { $r.Packs.Value = [math]::Floor([long]$sale.Quantity / 4); $r.Loose.Value = [long]$sale.Quantity % 4 }
     }
     if ($sale.Category -eq 'JD') { $r.Count.Value = $sale.Quantity }
-    if ($sale.Category -eq 'Cinema') { $r.Count.Value = [math]::Max(1, [math]::Round([long]$sale.Cents / 1800)) }
+    if ($sale.Category -eq 'Cinema') {
+        if([long]$sale.Quantity -gt 0){$r.Count.Value=$sale.Quantity}
+        else{$r.Count.Value=[math]::Max(1,[math]::Round([long]$sale.Cents / (Get-CinemaUnitPrice)))}
+    }
     if ($sale.Payment -eq 'Split') { $r.Cash.Text = Format-Number $sale.CashCents; $r.Card.Text = Format-Number $sale.CardCents }
     if ($sale.Payment -eq 'Cash') { $r.Cash.Text = Format-Number $sale.Cents }
     if ($sale.Payment -eq 'Card') { $r.Card.Text = Format-Number $sale.Cents }
@@ -414,8 +423,8 @@ $null = Button $salesTab 'Copiar por hora' 626 443 166 { Run-Action { [Windows.F
 $null = Button $salesTab 'WhatsApp por hora' 804 443 168 { Run-Action { Send-Report (Get-Report $script:state.Sales); Acknowledge-Reminder } }
 $null = Label $setupTab 'Informe o estoque existente no começo do turno.' 20 18 940 14 34
 $null = Label $setupTab 'WD e SD: cada pacote tem 4 comprimidos. Exemplo: 59 pacotes + 2 avulsos = 59-2 no relatório.' 20 58 940 10
-$null = Label $setupTab 'Data de início do turno' 20 104 230
-$shiftDate = New-Object Windows.Forms.DateTimePicker; $shiftDate.Format = 'Custom'; $shiftDate.CustomFormat = 'dd/MM/yyyy'
+$null = Label $setupTab 'Calendário / data do registro' 20 104 250
+$shiftDate = New-Object Windows.Forms.DateTimePicker; $shiftDate.Format = 'Custom'; $shiftDate.CustomFormat = 'ddd, dd/MM/yyyy'
 $shiftDate.SetBounds(20, 136, 210, 28); $setupTab.Controls.Add($shiftDate)
 $null = Label $setupTab 'Responsável' 280 104 650
 $nameBox = Textbox $setupTab 280 136 620
@@ -451,7 +460,7 @@ $tooltips.SetToolTip($entryRows.WD.Loose,'WD: €15 por comprimido avulso.')
 $tooltips.SetToolTip($entryRows.SD.Packs,'SD: pacote com 4 por €60. Avulso: €20.')
 $tooltips.SetToolTip($entryRows.SD.Loose,'SD: €20 por comprimido avulso.')
 $tooltips.SetToolTip($entryRows.JD.Count,'JD: 1 por €20, 4 por €55, 7 por €90. Combinação mais barata automática.')
-$tooltips.SetToolTip($entryRows.Cinema.Count,'Cinema: €18 por entrada.')
+$tooltips.SetToolTip($entryRows.Cinema.Count,'Cinema: €15 por entrada.')
 $form.KeyPreview=$true
 $form.Add_KeyDown({ param($sender,$e)
     if($e.Control -and $e.KeyCode -eq 'Enter' -and $tabs.SelectedTab -eq $salesTab -and $add.Enabled){ $add.PerformClick(); $e.SuppressKeyPress=$true }

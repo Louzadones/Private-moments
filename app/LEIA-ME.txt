@@ -1,4 +1,10 @@
-﻿PRIVATE MOMENTS V14 — FECHAMENTO COM DATA DO INÍCIO DO TURNO
+﻿PRIVATE MOMENTS V15 — CALENDÁRIO ATUAL DO PC
+O calendário de um novo turno abre na data de hoje e mostra o dia da semana.
+A data de registro e a abertura são separadas: o fechamento mantém a
+abertura de segunda mesmo se o calendário do cadastro mostra terça de madrugada.
+Cinema nesta loja continua €18. Valores já registrados são preservados.
+
+PRIVATE MOMENTS V14 — FECHAMENTO COM DATA DO INÍCIO DO TURNO
 DATE e DAY usam a data de abertura, inclusive depois da meia-noite.
 Exemplo: segunda até terça 02:00 -> data de segunda e MONDAY.
 Dados antigos cadastrados de madrugada são corrigidos uma vez ao abrir.

@@ -1,4 +1,4 @@
-SWEET SENSATION — V2
+SWEET SENSATION — V3
 
 Extraia TODOS os arquivos do ZIP para uma pasta própria e abra Sweet Sensation.exe.
 Mantenha a pasta assets junto dos arquivos. Requer Windows, Windows PowerShell 5.1
@@ -9,7 +9,9 @@ Informe data, responsável e estoque inicial, na ordem WD, JD e SD.
 WD e SD: pacotes de 4 e comprimidos avulsos. JD: unidades.
 Campos zerados aparecem vazios. Após salvar, a aba inicial fica no menu
 Turno > Corrigir dados iniciais. Horário fixo: 11.AM a 02.AM; FLOAT: €150.
-Depois da meia-noite, a data inicial sugerida é o dia anterior até 02:59.
+O calendário de um novo turno mostra a data e o dia da semana atuais do PC.
+Calendário do registro e abertura do turno são separados: registrar na
+madrugada de terça mantém a abertura de segunda no fechamento.
 O fechamento mantém a data e o dia da semana de abertura do turno.
 Exemplo: segunda até terça 02:00 -> MONDAY e a data de segunda.
 Cadastros antigos de madrugada são corrigidos uma vez ao abrir.
@@ -18,7 +20,7 @@ VENDAS
 WD: pacote de 4 por €50; avulso por €15.
 JD: 1 por €20, 4 por €55, 7 por €90; menor combinação automática.
 SD: pacote de 4 por €60; avulso por €20.
-Cinema: €18 por entrada. Shop: digite dinheiro/cartão diretamente.
+Cinema: €15 por entrada. Shop: digite dinheiro/cartão diretamente.
 Uma venda pode ter todas as categorias. Selecione Dinheiro ou Cartão;
 Dividido abre os campos das duas partes, cuja soma deve bater com o total.
 Clique novamente na bolinha para desmarcar. Registrar limpa os campos.

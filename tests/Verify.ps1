@@ -124,6 +124,13 @@ for ($hour=12; $hour -le 26; $hour++) {
     Assert ((Get-NextReminder $settings $slot.AddSeconds(-1)) -eq $slot) 'Next reminder must match actual next slot'
 }
 Assert ($null -eq (Get-NextReminder $settings ([datetime]'2026-11-10T02:00:00'))) 'No future reminder after closing'
+$calendarState=New-State; $calendarState.Settings=New-ShiftSettings ([datetime]'2026-11-10T01:00:00')
+Assert ((Get-ShiftCalendarDate $calendarState ([datetime]'2026-11-10T01:00:00')).Day -eq 10) 'Blank shift calendar must follow current PC date'
+Assert ((Get-ShiftCalendarDate $calendarState ([datetime]'2026-11-11T14:00:00')).Day -eq 11) 'Unstarted saved shift must refresh calendar on a new day'
+$calendarState.Settings.Ready=$true
+Assert ((Get-ShiftCalendarDate $calendarState ([datetime]'2026-11-11T14:00:00')).Day -eq 10) 'Registered shift must keep its registration date'
+Assert ((Get-OpeningDateFromCalendar ([datetime]'2026-11-10') ([datetime]'2026-11-10T01:00:00')).Day -eq 9) 'Current calendar date must not change overnight closing opening date'
+Assert ((Get-OpeningDateFromCalendar ([datetime]'2026-11-10') ([datetime]'2026-11-10T14:00:00')).Day -eq 10) 'Daytime opening date follows calendar'
 $nightSettings=New-ShiftSettings ([datetime]'2026-11-10T00:17:00')
 Assert ($nightSettings.Date -eq '2026-11-09') 'A new shift after midnight belongs to previous opening day'
 $nightSettings.Ready=$true; $nightSettings.Date='2026-11-10'

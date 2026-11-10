@@ -17,7 +17,7 @@ function New-ShiftSettings([datetime]$Now = (Get-Date)) {
     $shiftDay=$Now.Date
     if($Now.Hour -lt 3){$shiftDay=$shiftDay.AddDays(-1)}
     return [pscustomobject]@{
-        Ready = $false; Date = $shiftDay.ToString('yyyy-MM-dd'); DateBasisVersion = 1; Name = 'Renan'
+        Ready = $false; Date = $shiftDay.ToString('yyyy-MM-dd'); CalendarDate = $Now.ToString('yyyy-MM-dd'); DateBasisVersion = 1; Name = 'Renan'
         StartTime = '11.AM'; EndTime = '02.AM'; Float = [long]15000
         Stock = [pscustomobject]@{ WD = 0; JD = 0; SD = 0 }
     }
@@ -63,6 +63,20 @@ function Get-ShiftOpeningDate($State) {
     }
     return $date
 }
+function Get-OpeningDateFromCalendar([datetime]$Calendar,[datetime]$Now) {
+    $date=$Calendar.Date
+    if($Now.Hour -lt 3 -and $date -eq $Now.Date){$date=$date.AddDays(-1)}
+    return $date
+}
+function Get-ShiftCalendarDate($State,[datetime]$Now=(Get-Date)) {
+    if(-not $State.Settings.Ready){return $Now.Date}
+    if($State.Settings.CalendarDate){return [datetime]::ParseExact($State.Settings.CalendarDate,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)}
+    $date=Get-ShiftOpeningDate $State
+    $started=[datetimeoffset]::Parse($State.Started,[Globalization.CultureInfo]::InvariantCulture).DateTime
+    if($started.Hour -lt 3 -and $date -eq $started.Date.AddDays(-1)){return $started.Date}
+    return $date
+}
+function Get-CinemaUnitPrice { return [long]1800 }
 function New-State {
     return [pscustomobject]@{ Version = 2; LastReminder = ''; Started = (Get-Date).ToString('o'); Phone = ''; Settings = (New-ShiftSettings); Sales = @() }
 }
@@ -117,7 +131,7 @@ function Get-Price([string]$Category, [int]$Packs, [int]$Loose, [int]$Count) {
     switch ($Category) {
         WD { return [long]($Packs * 5000 + $Loose * 1500) }
         SD { return [long]($Packs * 6000 + $Loose * 2000) }
-        Cinema { return [long]($Count * 1800) }
+        Cinema { return [long]($Count * (Get-CinemaUnitPrice)) }
         JD {
             if ($null -eq $script:jdPrices) { $script:jdPrices = New-Object 'System.Collections.Generic.List[long]'; $script:jdPrices.Add(0) }
             for ($i = $script:jdPrices.Count; $i -le $Count; $i++) {

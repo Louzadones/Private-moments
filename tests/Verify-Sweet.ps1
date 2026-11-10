@@ -108,7 +108,7 @@ Get-ChildItem -LiteralPath $source -Filter '*.ps1' | ForEach-Object {
 Assert ((Get-Price 'WD' 1 1 0) -eq 6500) 'WD price'
 Assert ((Get-Price 'SD' 1 1 0) -eq 8000) 'SD price'
 foreach ($pair in @(@(1,2000),@(4,5500),@(5,7500),@(7,9000),@(8,11000),@(14,18000))) { Assert ((Get-Price 'JD' 0 0 $pair[0]) -eq $pair[1]) 'JD best price' }
-Assert ((Get-Price 'Cinema' 0 0 3) -eq 5400) 'Cinema price'
+Assert ((Get-Price 'Cinema' 0 0 3) -eq 4500) 'Cinema price'
 $settings = New-ShiftSettings; $settings.Ready = $true; $settings.Date = '2026-11-09'
 Assert ($null -eq (Get-DueReminder $settings ([datetime]'2026-11-09T10:59:59') ([datetime]'2026-11-09T11:00:00') '')) 'No 11am reminder'
 Assert ((Get-DueReminder $settings ([datetime]'2026-11-09T11:59:59') ([datetime]'2026-11-09T12:00:00') '').Hour -eq 12) 'Noon reminder'
@@ -124,6 +124,13 @@ for ($hour=12; $hour -le 26; $hour++) {
     Assert ((Get-NextReminder $settings $slot.AddSeconds(-1)) -eq $slot) 'Next reminder must match actual next slot'
 }
 Assert ($null -eq (Get-NextReminder $settings ([datetime]'2026-11-10T02:00:00'))) 'No future reminder after closing'
+$calendarState=New-State; $calendarState.Settings=New-ShiftSettings ([datetime]'2026-11-10T01:00:00')
+Assert ((Get-ShiftCalendarDate $calendarState ([datetime]'2026-11-10T01:00:00')).Day -eq 10) 'Blank shift calendar must follow current PC date'
+Assert ((Get-ShiftCalendarDate $calendarState ([datetime]'2026-11-11T14:00:00')).Day -eq 11) 'Unstarted saved shift must refresh calendar on a new day'
+$calendarState.Settings.Ready=$true
+Assert ((Get-ShiftCalendarDate $calendarState ([datetime]'2026-11-11T14:00:00')).Day -eq 10) 'Registered shift must keep its registration date'
+Assert ((Get-OpeningDateFromCalendar ([datetime]'2026-11-10') ([datetime]'2026-11-10T01:00:00')).Day -eq 9) 'Current calendar date must not change overnight closing opening date'
+Assert ((Get-OpeningDateFromCalendar ([datetime]'2026-11-10') ([datetime]'2026-11-10T14:00:00')).Day -eq 10) 'Daytime opening date follows calendar'
 $nightSettings=New-ShiftSettings ([datetime]'2026-11-10T00:17:00')
 Assert ($nightSettings.Date -eq '2026-11-09') 'A new shift after midnight belongs to previous opening day'
 $nightSettings.Ready=$true; $nightSettings.Date='2026-11-10'
@@ -188,15 +195,15 @@ $entryRows.SD.SplitRadio.Checked = $true; $entryRows.SD.Cash.Text = '30'; $entry
 $entryRows.JD.Count.Value = 5; $entryRows.JD.CashRadio.Checked = $true
 $entryRows.Cinema.Count.Value = 2; $entryRows.Cinema.CardRadio.Checked = $true
 $entryRows.Shop.Cash.Text = '5'; $entryRows.Shop.Card.Text = '5,50'
-if ($basketTotal.Text -notmatch '266.5') { throw 'Basket calculation failed' }
+if ($basketTotal.Text -notmatch '260.5') { throw 'Basket calculation failed' }
 $add.PerformClick()
 if ($script:state.Sales.Count -ne 5) { throw 'Multi-category sale failed' }
 $b = Get-Breakdown $script:state.Sales
-if ($b.Cash -ne 13000 -or $b.Card -ne 13650) { throw 'Split payment totals incorrect' }
+if ($b.Cash -ne 13000 -or $b.Card -ne 13050) { throw 'Split payment totals incorrect' }
 $remaining = Get-RemainingStock $script:state
 if ($remaining.WD -ne 233 -or $remaining.SD -ne 7 -or $remaining.JD -ne 37) { throw 'Multi-category stock incorrect' }
 if ($entryRows.WD.Packs.Text -ne '' -or $entryRows.WD.CashRadio.Checked -or $entryRows.WD.SplitRadio.Checked -or $entryRows.WD.Cash.Text -ne '') { throw 'Sale not cleared' }
-if ($report.Text -notmatch 'WD: €220' -or $report.Text -notmatch 'TOTAL:  €266.5') { throw 'Hourly report totals incorrect' }
+if ($report.Text -notmatch 'WD: €220' -or $report.Text -notmatch 'TOTAL:  €260.5') { throw 'Hourly report totals incorrect' }
 if (-not $closingReport.Text.Contains('WD..cash ….€.20') -or -not $closingReport.Text.Contains('SD..VISA..€.50')) { throw 'Closing breakdown incorrect' }
 # Invalid mixed payment must reject the entire basket without changing inventory.
 $entryRows.WD.Loose.Value = 1; $entryRows.WD.SplitRadio.Checked = $true; $entryRows.WD.Cash.Text = '14'
