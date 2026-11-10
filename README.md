@@ -4,7 +4,9 @@ Aplicativo para Windows que registra vendas, controla estoque e prepara os relat
 
 ## Usar
 
-Baixe [Private-Moments-V12.zip](releases/Private-Moments-V12.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Mantenha a pasta `assets` junto ao aplicativo. Só a janela do aplicativo aparece.
+Baixe [Private-Moments-V13.zip](releases/Private-Moments-V13.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Mantenha a pasta `assets` junto ao aplicativo. Só a janela do aplicativo aparece.
+
+A segunda loja tem seu próprio pacote: [Sweet-Sensation-V1.zip](releases/Sweet-Sensation-V1.zip). Extraia em outra pasta e abra **Sweet Sensation.exe**. Ela tem logo S, nome e relatórios próprios. As duas versões podem funcionar ao mesmo tempo, cada uma com seus arquivos de vendas, estoque e turnos. Não misture os arquivos `dados.json` das lojas.
 
 Requer Windows com Windows PowerShell 5.1 e .NET Framework 4.x. Não requer Python, Excel ou instalação de pacotes.
 
@@ -26,6 +28,8 @@ O relatório curto mantém WD como a soma dos valores de WD + JD + SD, conforme 
 O relógio segue o PC. Com o aplicativo aberto, os lembretes vão das 12:00 às 01:00; às 02:00 há o aviso de fechamento. O aplicativo solicita o piscar da barra de tarefas e apresenta uma notificação. A apresentação e pequenos atrasos dependem do Windows. Computador desligado/em suspensão ou aplicativo fechado impedem o aviso no horário exato.
 
 Cada aviso mostra o próprio horário: “14:00 — Enviar relatório”, “00:00 — Enviar relatório” e, exclusivamente às 02:00, “02:00 — Enviar relatório de fechamento”. O rodapé mostra o próximo alerta. Ao retomar após uma pausa, só há aviso se existir um horário programado na hora atual; um fechamento antigo não reaparece à tarde.
+
+Na V13, iniciar um turno entre 00:00 e 02:59 sugere a data de abertura do dia anterior. Dados existentes com a data de hoje cadastrada de madrugada recebem os avisos de 01:00/02:00 na madrugada atual, sem alterar a data salva no relatório. Reabrir o app durante uma hora programada emite o aviso pendente daquela hora uma vez, respeitando o último horário já avisado.
 
 O WhatsApp abre a mensagem pronta. Você escolhe a conversa e confirma o envio; não há envio automático nem confirmação de recebimento.
 
@@ -54,13 +58,17 @@ Compilar e criar ZIP no PowerShell:
 
 ```powershell
 .\build.ps1 -Package
+.\build-sweet.ps1 -Package
 ```
 
 Testar no Windows PowerShell em modo STA (abre brevemente uma janela de teste):
 
 ```powershell
 powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File .\tests\Verify.ps1
+powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File .\tests\Verify-Sweet.ps1
 ```
+
+`build-sweet.ps1` gera o aplicativo da segunda loja a partir do mesmo código validado, aplicando os nomes e identificadores próprios e usando os assets em `brands/sweet-sensation/`. Também gera os testes equivalentes para essa marca. Os testes usam mutexes únicos para funcionar mesmo com os aplicativos reais das lojas abertos.
 
 ## Referências de UX
 

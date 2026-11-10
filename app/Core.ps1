@@ -13,9 +13,11 @@ function Format-Stock([string]$Category, [long]$Units) {
     if ($loose -gt 0) { return "$packs-$loose" }
     return [string]$packs
 }
-function New-ShiftSettings {
+function New-ShiftSettings([datetime]$Now = (Get-Date)) {
+    $shiftDay=$Now.Date
+    if($Now.Hour -lt 3){$shiftDay=$shiftDay.AddDays(-1)}
     return [pscustomobject]@{
-        Ready = $false; Date = (Get-Date).ToString('yyyy-MM-dd'); Name = 'Renan'
+        Ready = $false; Date = $shiftDay.ToString('yyyy-MM-dd'); Name = 'Renan'
         StartTime = '11.AM'; EndTime = '02.AM'; Float = [long]15000
         Stock = [pscustomobject]@{ WD = 0; JD = 0; SD = 0 }
     }
@@ -120,7 +122,7 @@ function Get-Price([string]$Category, [int]$Packs, [int]$Loose, [int]$Count) {
 }
 function Get-DueReminder($Settings, [datetime]$After, [datetime]$Now, [string]$LastReminder) {
     if (-not $Settings.Ready -or $Now -lt $After) { return $null }
-    $day = [datetime]::ParseExact($Settings.Date, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    $day = Get-ReminderDay $Settings $Now
     $due = $null
     for ($hour = 12; $hour -le 26; $hour++) {
         $slot = $day.AddHours($hour)
@@ -133,9 +135,20 @@ function Get-ReminderText([datetime]$Slot) {
     if ($Slot.Hour -eq 2) { $text += ' de fechamento' }
     return $text
 }
+function Get-ReminderDay($Settings,[datetime]$Now) {
+    $day=[datetime]::ParseExact($Settings.Date,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture)
+    # After midnight, a shift entered with today's date still closes this morning.
+    # Keep the report's explicitly saved date unchanged; adjust scheduling only.
+    if($Now.Hour -lt 3 -and $day.Date -eq $Now.Date){$day=$day.AddDays(-1)}
+    return $day
+}
+function Get-ReminderCheckpoint([datetime]$Now) {
+    # On reopening, catch this hour once; persisted LastReminder prevents duplicates.
+    return $Now.Date.AddHours($Now.Hour).AddTicks(-1)
+}
 function Get-NextReminder($Settings, [datetime]$Now) {
     if (-not $Settings.Ready) { return $null }
-    $day = [datetime]::ParseExact($Settings.Date, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    $day = Get-ReminderDay $Settings $Now
     for ($hour = 12; $hour -le 26; $hour++) {
         $slot = $day.AddHours($hour)
         if ($slot -gt $Now) { return $slot }

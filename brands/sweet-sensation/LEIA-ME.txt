@@ -1,0 +1,51 @@
+SWEET SENSATION — V1
+
+Extraia TODOS os arquivos do ZIP para uma pasta própria e abra Sweet Sensation.exe.
+Mantenha a pasta assets junto dos arquivos. Requer Windows, Windows PowerShell 5.1
+e .NET Framework 4.x. A logo S com beijo usa vinho #590027 e rosa #F7A6CE.
+
+INÍCIO DO TURNO
+Informe data, responsável e estoque inicial, na ordem WD, JD e SD.
+WD e SD: pacotes de 4 e comprimidos avulsos. JD: unidades.
+Campos zerados aparecem vazios. Após salvar, a aba inicial fica no menu
+Turno > Corrigir dados iniciais. Horário fixo: 11.AM a 02.AM; FLOAT: €150.
+Depois da meia-noite, a data inicial sugerida é o dia anterior até 02:59.
+
+VENDAS
+WD: pacote de 4 por €50; avulso por €15.
+JD: 1 por €20, 4 por €55, 7 por €90; menor combinação automática.
+SD: pacote de 4 por €60; avulso por €20.
+Cinema: €18 por entrada. Shop: digite dinheiro/cartão diretamente.
+Uma venda pode ter todas as categorias. Selecione Dinheiro ou Cartão;
+Dividido abre os campos das duas partes, cuja soma deve bater com o total.
+Clique novamente na bolinha para desmarcar. Registrar limpa os campos.
+Ctrl+Enter registra uma venda válida; Esc cancela uma correção.
+O histórico permite editar/excluir linhas e recalcula os estoques.
+
+RELATÓRIOS
+Por hora: cinco linhas sem espaços em branco; WD soma WD + JD + SD.
+O fechamento detalha CASH e VISA por categoria, estoques inicial/final,
+responsável, data, dia e FLOAT. O FLOAT não entra no valor vendido.
+O WhatsApp abre o relatório pronto para escolher a conversa e confirmar envio.
+
+LEMBRETES
+12:00 a 01:00: Enviar relatório. Às 02:00: Enviar relatório de fechamento.
+Seguem o relógio do PC. Um turno cadastrado com a data de hoje depois da
+meia-noite recebe os avisos de 01:00/02:00 da madrugada atual.
+Ao reabrir na hora de um aviso ainda pendente, o aplicativo avisa uma vez;
+não repete se esse horário já foi registrado como avisado.
+O computador precisa estar ligado e ativo e o app aberto, mesmo nos ícones
+ocultos. Os avisos e o piscar dependem da apresentação de notificações do Windows.
+
+FECHAR E SALVAR
+O X esconde a janela silenciosamente no ícone perto do relógio. O turno,
+campos ainda digitados e lembretes continuam. Clique no ícone para voltar.
+Para encerrar de verdade: botão direito no ícone > Sair do aplicativo.
+Vendas registradas são gravadas em dados.json; campos ainda não registrados
+são descartados ao sair de verdade, com confirmação.
+
+DADOS SEPARADOS
+Use esta loja em uma pasta exclusiva. Cada pasta possui seu próprio dados.json,
+backup e turnos arquivados. Não copie dados de outra loja para esta pasta.
+O aplicativo pode funcionar ao mesmo tempo que a versão da outra loja.
+Novo turno arquiva o atual e zera vendas/estoques após confirmação.

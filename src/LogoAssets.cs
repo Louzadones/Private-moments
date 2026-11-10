@@ -17,11 +17,16 @@ public static class LogoAssets
         using (Bitmap flat = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb))
         {
             for (int y = 0; y < source.Height; y++)
-            for (int x = 0; x < source.Width; x++)
             {
-                Color pixel = source.GetPixel(x, y);
-                Color fill = pixel.G >= 80 ? pink : wine;
-                flat.SetPixel(x, y, Color.FromArgb(pixel.A >= 128 ? 255 : 0, fill));
+                int left=source.Width, right=-1;
+                for(int x=0;x<source.Width;x++) {
+                    if(source.GetPixel(x,y).A>=128){left=Math.Min(left,x);right=x;}
+                }
+                for (int x = 0; x < source.Width; x++) {
+                    Color pixel = source.GetPixel(x, y);
+                    Color fill = pixel.G >= 80 ? pink : wine;
+                    flat.SetPixel(x, y, Color.FromArgb(x>=left && x<=right ? 255 : 0, fill));
+                }
             }
             flat.Save(Path.Combine(destination, "logo.png"), ImageFormat.Png);
             int[] sizes = {16, 24, 32, 48, 64, 128, 256};

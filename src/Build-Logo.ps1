@@ -1,9 +1,10 @@
-param([string]$ReferencePath)
+param([string]$ReferencePath,[string]$DestinationPath)
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.Drawing
 Add-Type -Path (Join-Path $PSScriptRoot 'LogoAssets.cs') -ReferencedAssemblies System.Drawing
 if (-not $ReferencePath) { $ReferencePath=Join-Path $PSScriptRoot 'logo-reference.png' }
-$destination=Join-Path $PSScriptRoot '../app/assets'
+$destination=$DestinationPath
+if(-not $destination){$destination=Join-Path $PSScriptRoot '../app/assets'}
 [LogoAssets]::Create($ReferencePath,$destination)
 $image=[Drawing.Bitmap]::new((Join-Path $destination 'logo.png'))
 try {

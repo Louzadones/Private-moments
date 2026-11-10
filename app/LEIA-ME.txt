@@ -1,4 +1,12 @@
-﻿PRIVATE MOMENTS V12 — RELATÓRIO POR HORA COMPACTO
+﻿PRIVATE MOMENTS V13 — CORREÇÃO DO AVISO DE 01:00
+
+Turnos iniciados depois da meia-noite sugerem a data anterior até 02:59.
+Se a data de hoje já foi cadastrada de madrugada, o alarme de 01:00/02:00
+é calculado para a madrugada atual. A data salva do relatório é preservada.
+Ao reabrir, avisa a hora atual se ainda não foi avisada, sem duplicar.
+Para ativar a atualização, use Sair do aplicativo e reabra pelo atalho.
+
+PRIVATE MOMENTS V12 — RELATÓRIO POR HORA COMPACTO
 O relatório por hora sai em cinco linhas seguidas, sem linhas em branco,
 com dois espaços depois de TOTAL:. O fechamento mantém seu modelo.
 

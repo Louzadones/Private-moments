@@ -534,7 +534,7 @@ public static class TaskbarAlert {
 }
 "@
 function Acknowledge-Reminder { [TaskbarAlert]::Flash($form.Handle, $false); $script:reminderPending = $false }
-$script:lastCheck = Get-Date
+$script:lastCheck = Get-ReminderCheckpoint (Get-Date)
 $script:reminderPending = $false
 if ($null -eq $script:state.PSObject.Properties['LastReminder']) { $script:state | Add-Member -NotePropertyName LastReminder -NotePropertyValue '' }
 $clockLabel = Label $form '' 22 624 770 10

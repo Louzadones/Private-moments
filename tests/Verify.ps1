@@ -110,6 +110,16 @@ for ($hour=12; $hour -le 26; $hour++) {
     Assert ((Get-NextReminder $settings $slot.AddSeconds(-1)) -eq $slot) 'Next reminder must match actual next slot'
 }
 Assert ($null -eq (Get-NextReminder $settings ([datetime]'2026-11-10T02:00:00'))) 'No future reminder after closing'
+$nightSettings=New-ShiftSettings ([datetime]'2026-11-10T00:17:00')
+Assert ($nightSettings.Date -eq '2026-11-09') 'A new shift after midnight belongs to previous opening day'
+$nightSettings.Ready=$true; $nightSettings.Date='2026-11-10'
+Assert ((Get-DueReminder $nightSettings ([datetime]'2026-11-10T00:59:59') ([datetime]'2026-11-10T01:00:00') '').Hour -eq 1) 'Existing midnight shift with today date must alert at 1am today'
+Assert ((Get-NextReminder $nightSettings ([datetime]'2026-11-10T00:50:00')) -eq [datetime]'2026-11-10T01:00:00') 'Show correct next 1am for midnight shift'
+Assert ((Get-NextReminder $nightSettings ([datetime]'2026-11-10T01:10:00')) -eq [datetime]'2026-11-10T02:00:00') 'Next alert after 1am is closing this morning'
+Assert ($nightSettings.Date -eq '2026-11-10') 'Scheduling must preserve explicitly saved report date'
+$reopened=[datetime]'2026-11-10T01:12:00'
+Assert ((Get-DueReminder $nightSettings (Get-ReminderCheckpoint $reopened) $reopened '').Hour -eq 1) 'Reopening at 1:12 must catch current hour'
+Assert ($null -eq (Get-DueReminder $nightSettings (Get-ReminderCheckpoint $reopened) $reopened '2026-11-10T01:00:00')) 'Reopening must not repeat acknowledged current hour'
 Assert ($null -eq (Get-DueReminder $settings ([datetime]'2026-11-10T01:59:00') ([datetime]'2026-11-10T14:00:00') '')) 'Do not show an old closing reminder in the afternoon'
 Assert ((Get-DueReminder $settings ([datetime]'2026-11-09T12:00:00') ([datetime]'2026-11-09T15:40:00') '').Hour -eq 15) 'Resuming must use current hour only'
 $smoke = Join-Path $PSScriptRoot ('qa-' + [guid]::NewGuid().ToString('N'))
@@ -198,6 +208,12 @@ foreach($time in @('2026-11-09T14:00:00','2026-11-09T23:00:00','2026-11-10T00:00
     if($tray.BalloonTipText -ne 'O relatório está pronto. Enviar relatório.'){throw 'Notification body must be concise without automatic-send disclaimer'}
     Acknowledge-Reminder
 }
+$script:state.Settings.Date='2026-11-10'; $script:state.LastReminder=''
+$script:lastCheck=Get-ReminderCheckpoint ([datetime]'2026-11-10T01:12:00')
+$form.Close(); Check-Reminder ([datetime]'2026-11-10T01:12:00')
+if($tray.BalloonTipTitle -cne '01:00 — Enviar relatório' -or -not $form.Visible){throw '1am alert must work for midnight-created shift even after reopening in tray'}
+Acknowledge-Reminder
+$script:state.Settings.Date='2026-11-09'
 $script:lastCheck = [datetime]'2026-11-10T01:59:59'
 Check-Reminder ([datetime]'2026-11-10T02:00:00')
 if($tray.BalloonTipTitle -cne '02:00 — Enviar relatório de fechamento'){throw 'Closing notification must be exclusive to 02:00'}
@@ -232,7 +248,9 @@ $script:allowExit=$true
 $form.Close()
 if (-not $form.IsDisposed) { throw 'Explicit quit must close app' }
 '@
-$script = $script.Replace('LocalPrivateMomentsSalesApp', ('LocalPrivateMomentsQA-' + [guid]::NewGuid().ToString('N')))
+$qaMutex='Local\PrivateMomentsQA-' + [guid]::NewGuid().ToString('N')
+$script = $script.Replace('Local\PrivateMomentsSalesApp', $qaMutex)
+Assert ($script.Contains($qaMutex)) 'UI tests must use an isolated mutex even when the real store app is running'
 $script = $script.Replace('[Windows.Forms.Application]::Run($form)', $replacement)
 $script = $script.Replace("[Windows.Forms.MessageBox]::Show(`$_.Exception.Message, 'Confira os dados') | Out-Null", 'throw')
 $script = $script.Replace("[Windows.Forms.MessageBox]::Show(`$_.Exception.Message, 'Erro no aplicativo') | Out-Null", 'throw')
