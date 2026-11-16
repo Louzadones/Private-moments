@@ -78,7 +78,7 @@ function Get-ShiftCalendarDate($State,[datetime]$Now=(Get-Date)) {
 }
 function Get-CinemaUnitPrice { return [long]1500 }
 function New-State {
-    return [pscustomobject]@{ Version = 2; LastReminder = ''; Started = (Get-Date).ToString('o'); Phone = ''; Settings = (New-ShiftSettings); Sales = @() }
+    return [pscustomobject]@{ Version = 2; ShiftId=[guid]::NewGuid().ToString('N'); LastReminder = ''; Started = (Get-Date).ToString('o'); Phone = ''; Settings = (New-ShiftSettings); Sales = @() }
 }
 function Get-Totals($Sales) {
     $t = @{}; foreach ($c in @('WD', 'JD', 'SD', 'Shop', 'Cinema')) { $t[$c] = [long]0 }
@@ -193,6 +193,8 @@ function Upgrade-State($State) {
         $State.Version = 2
     }
     if ($State.Version -ne 2 -or $null -eq $State.Sales -or $null -eq $State.Settings -or $null -eq $State.Started) { throw 'Formato de dados desconhecido.' }
+    if($null -eq $State.PSObject.Properties['ShiftId']){$State | Add-Member -NotePropertyName ShiftId -NotePropertyValue ([guid]::NewGuid().ToString('N'))}
+    $null=[guid]::Parse($State.ShiftId)
     $State.Settings.Date=(Get-ShiftOpeningDate $State).ToString('yyyy-MM-dd')
     if($null -eq $State.Settings.PSObject.Properties['DateBasisVersion']){
         $State.Settings | Add-Member -NotePropertyName DateBasisVersion -NotePropertyValue 1
@@ -200,3 +202,4 @@ function Upgrade-State($State) {
     $null = Get-Totals $State.Sales; $null = Get-Breakdown $State.Sales
     return $State
 }
+. (Join-Path $PSScriptRoot 'History.ps1')

@@ -1,11 +1,11 @@
-param([switch]$Package)
+﻿param([switch]$Package)
 $ErrorActionPreference='Stop'
 $destination=Join-Path $PSScriptRoot 'sweet-sensation/app'
 $null=New-Item -ItemType Directory -Path $destination -Force
 function Convert-StoreText([string]$Text){
     return $Text.Replace('Private Moments','Sweet Sensation').Replace('PRIVATE MOMENTS','SWEET SENSATION').Replace('PrivateMoments','SweetSensation').Replace('private-moments','sweet-sensation').Replace('return [long]1800','return [long]1500').Replace('Cinema: €18','Cinema: €15')
 }
-foreach($name in @('Private Moments.ps1','Core.ps1','Fechamento.txt')){
+foreach($name in @('Private Moments.ps1','Core.ps1','History.ps1','Fechamento.txt')){
     $text=Get-Content -LiteralPath (Join-Path $PSScriptRoot "app/$name") -Raw -Encoding UTF8
     $target=Join-Path $destination ($name.Replace('Private Moments','Sweet Sensation'))
     [IO.File]::WriteAllText($target,(Convert-StoreText $text),(New-Object Text.UTF8Encoding($true)))
@@ -18,7 +18,8 @@ $source=Join-Path $PSScriptRoot 'src/SweetSensationLauncher.cs'
 $compiler=Join-Path $env:SystemRoot 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
 if(-not(Test-Path -LiteralPath $compiler)){$compiler=Join-Path $env:SystemRoot 'Microsoft.NET/Framework/v4.0.30319/csc.exe'}
 $binary=Join-Path $destination 'Sweet Sensation.exe'
-& $compiler /nologo /target:winexe "/out:$binary" ("/win32icon:"+(Join-Path $destination 'assets/app.ico')) /reference:System.Windows.Forms.dll $source
+$automation=(Get-ChildItem -LiteralPath (Join-Path $env:SystemRoot 'Microsoft.NET/assembly/GAC_MSIL/System.Management.Automation') -Filter System.Management.Automation.dll -Recurse | Select-Object -First 1 -ExpandProperty FullName)
+& $compiler /nologo /target:winexe "/out:$binary" ("/win32icon:"+(Join-Path $destination 'assets/app.ico')) /reference:System.Windows.Forms.dll "/reference:$automation" $source
 if($LASTEXITCODE -ne 0){throw 'Falha ao compilar Sweet Sensation.'}
 $tests=Convert-StoreText (Get-Content -LiteralPath (Join-Path $PSScriptRoot 'tests/Verify.ps1') -Raw -Encoding UTF8)
 $tests=$tests.Replace("Join-Path `$PSScriptRoot '../app'","Join-Path `$PSScriptRoot '../sweet-sensation/app'")
@@ -26,6 +27,6 @@ $tests=$tests.Replace("-eq 5400) 'Cinema price'","-eq 4500) 'Cinema price'").Rep
 [IO.File]::WriteAllText((Join-Path $PSScriptRoot 'tests/Verify-Sweet.ps1'),$tests,(New-Object Text.UTF8Encoding($true)))
 if($Package){
     $null=New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'releases') -Force
-    $files=@('Sweet Sensation.exe','Sweet Sensation.ps1','Core.ps1','Fechamento.txt','LEIA-ME.txt','assets') | ForEach-Object {Join-Path $destination $_}
-    Compress-Archive -LiteralPath $files -DestinationPath (Join-Path $PSScriptRoot 'releases/Sweet-Sensation-V4.zip') -Force
+    $files=@('Sweet Sensation.exe','Sweet Sensation.ps1','Core.ps1','History.ps1','Fechamento.txt','LEIA-ME.txt','assets') | ForEach-Object {Join-Path $destination $_}
+    Compress-Archive -LiteralPath $files -DestinationPath (Join-Path $PSScriptRoot 'releases/Sweet-Sensation-V5.zip') -Force
 }

@@ -2,6 +2,9 @@
 dados.json*
 dados.backup.json
 turnos/
+historico/
+Vendas_*
+tests/qa-ledger-*/
 *.tmp
 *.log
 # Saídas de testes e ferramentas locais

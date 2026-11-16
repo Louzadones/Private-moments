@@ -1,4 +1,19 @@
-﻿PRIVATE MOMENTS V16 — PROMOÇÕES AUTOMÁTICAS
+﻿PRIVATE MOMENTS V17 — NOVO VISUAL, FECHAR TURNO E HISTÓRICO
+
+A janela agora pertence ao executável do app, com logo P na barra de tarefas.
+Depois de enviar seu último relatório, clique em Fechar turno e confirme.
+O registro do dia fica em historico/diarios/Vendas_AAAA-MM-DD.txt.
+O fechamento detalhado e os dados completos ficam nas pastas historico.
+O app zera as vendas do turno ativo e prepara o início do próximo, mantendo
+o histórico. Se não fechar, os dados em andamento continuam ao reabrir.
+No último dia de cada mês, gera Vendas_AAAA-MM.txt na pasta principal.
+Soma WD (inclui JD e SD), Shop e Cinema, incluindo o turno em andamento.
+Se o app ficou fechado na virada, gera o mês pendente quando abrir.
+Histórico e arquivos permite abrir diários, gerar resumo mensal e abrir a pasta.
+Preserve dados.json, historico, turnos e Vendas_*.txt ao atualizar o app.
+Para ativar o novo ícone, use Sair do aplicativo e abra pelo atalho.
+
+PRIVATE MOMENTS V16 — PROMOÇÕES AUTOMÁTICAS
 WD: 5 pacotes (20 comprimidos) por €180. 6 pacotes: €230; 10: €360.
 Avulsos de WD: €15 cada, somados à parte. JD: 7 unidades por €90.
 Cinema do Private Moments continua €18. Vendas anteriores são preservadas.

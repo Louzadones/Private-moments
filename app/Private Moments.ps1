@@ -32,10 +32,39 @@ public class EmptyNumberBox : NumericUpDown {
  protected override void OnEnter(EventArgs e) { base.OnEnter(e); Select(0, Text.Length); }
 }
 public class ToggleRadioButton : RadioButton {
+ public ToggleRadioButton() { SetStyle(ControlStyles.UserPaint|ControlStyles.AllPaintingInWmPaint|ControlStyles.OptimizedDoubleBuffer,true); }
  protected override void OnClick(EventArgs e) {
   bool wasChecked = Checked;
   base.OnClick(e);
   if (wasChecked) Checked = false;
+ }
+ protected override void OnPaint(PaintEventArgs e) {
+  e.Graphics.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+  using(SolidBrush bg=new SolidBrush(BackColor)) e.Graphics.FillRectangle(bg,ClientRectangle);
+  int y=(Height-14)/2;
+  using(Pen outline=new Pen(ForeColor,1.5f)) e.Graphics.DrawEllipse(outline,3,y,14,14);
+  if(Checked) using(SolidBrush dot=new SolidBrush(ForeColor)) e.Graphics.FillEllipse(dot,7,y+4,6,6);
+  if(Focused) ControlPaint.DrawFocusRectangle(e.Graphics,new Rectangle(1,y-3,20,20),ForeColor,BackColor);
+ }
+}
+public class BrandButton : Button {
+ private bool hover;
+ protected override void OnMouseEnter(EventArgs e){hover=true;base.OnMouseEnter(e);Invalidate();}
+ protected override void OnMouseLeave(EventArgs e){hover=false;base.OnMouseLeave(e);Invalidate();}
+ protected override void OnPaint(PaintEventArgs e){
+  e.Graphics.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+  Color bg=Enabled && hover ? FlatAppearance.MouseOverBackColor : BackColor;
+  if(bg.IsEmpty) bg=BackColor;
+  using(SolidBrush parent=new SolidBrush(Parent==null ? BackColor : Parent.BackColor)) e.Graphics.FillRectangle(parent,ClientRectangle);
+  using(System.Drawing.Drawing2D.GraphicsPath path=new System.Drawing.Drawing2D.GraphicsPath()){
+   int w=Width-1,h=Height-1,r=8;
+   path.AddArc(0,0,r,r,180,90);path.AddArc(w-r,0,r,r,270,90);path.AddArc(w-r,h-r,r,r,0,90);path.AddArc(0,h-r,r,r,90,90);path.CloseFigure();
+   using(SolidBrush fill=new SolidBrush(bg)) e.Graphics.FillPath(fill,path);
+   if(FlatAppearance.BorderSize>0) using(Pen border=new Pen(FlatAppearance.BorderColor,1)) e.Graphics.DrawPath(border,path);
+  }
+  Color fg=Enabled ? ForeColor : ColorTranslator.FromHtml("#CBA8BB");
+  TextRenderer.DrawText(e.Graphics,Text,Font,ClientRectangle,fg,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
+  if(Focused) ControlPaint.DrawFocusRectangle(e.Graphics,new Rectangle(4,4,Width-8,Height-8),fg,bg);
  }
 }
 public class TrayForm : Form {
@@ -50,7 +79,7 @@ public class TrayForm : Form {
 "@
 [Windows.Forms.Application]::EnableVisualStyles()
 $script:Theme=@{}
-foreach($entry in @{Wine='#590027';Pink='#F7A6CE';Canvas='#FFF3F8';Surface='#FFFBFD';Text='#3B1026';Muted='#76445C';Line='#C8739A';Error='#A31B46';Disabled='#EAD2DE';Hover='#79073C'}.GetEnumerator()){
+foreach($entry in @{Wine='#590027';Pink='#F7A6CE';Canvas='#180E1A';Surface='#241326';Text='#FCE7F2';Muted='#CBA8BB';Line='#6E3A55';Error='#FF8EAF';Disabled='#44283A';Hover='#7E2150';Focus='#482139'}.GetEnumerator()){
     $script:Theme[$entry.Key]=[Drawing.ColorTranslator]::FromHtml($entry.Value)
 }
 . (Join-Path $PSScriptRoot 'Core.ps1')
@@ -65,9 +94,10 @@ public static class ExistingWindow {
  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern IntPtr FindWindow(string cls, string title);
  [DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr handle, int message, IntPtr wparam, IntPtr lparam);
  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr handle);
+ public static IntPtr FindExisting(string title) { return FindWindow(null,title); }
 }
 "@
-    $existing = [ExistingWindow]::FindWindow($null, 'Private Moments | Vendas e fechamento')
+    $existing = [ExistingWindow]::FindExisting('Private Moments | Vendas e fechamento')
     if ($existing -ne [IntPtr]::Zero) { $null=[ExistingWindow]::SendMessage($existing,0x802A,[IntPtr]::Zero,[IntPtr]::Zero); $null=[ExistingWindow]::SetForegroundWindow($existing) }
     else { [Windows.Forms.MessageBox]::Show('Private Moments já está iniciando. Aguarde a janela ou abra pelo ícone perto do relógio.', 'Private Moments') | Out-Null }
     $mutex.Dispose(); exit
@@ -82,6 +112,10 @@ try {
         # Preserve a separate original before upgrading the first version.
         if ($loaded.Version -eq 1 -and -not (Test-Path -LiteralPath ($dataPath + '.v1'))) { Copy-Item -LiteralPath $dataPath -Destination ($dataPath + '.v1') }
         $script:state = Upgrade-State $loaded
+        if(Test-Path -LiteralPath (Get-ClosedShiftPath $PSScriptRoot $script:state)){
+            $previousName=$script:state.Settings.Name
+            $script:state=New-State; $script:state.Settings.Name=$previousName
+        }
     }
 } catch {
     [Windows.Forms.MessageBox]::Show("Não foi possível ler dados.json. Seus dados foram preservados. Verifique o arquivo ou restaure dados.backup.json.`r`n`r`n$($_.Exception.Message)", 'Erro ao carregar') | Out-Null
@@ -92,6 +126,7 @@ function Save-State {
     $script:state | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $temp -Encoding UTF8
     if (Test-Path -LiteralPath $dataPath) { [IO.File]::Replace($temp, $dataPath, $backupPath) }
     else { [IO.File]::Move($temp, $dataPath) }
+    try{Sync-MonthlySales $PSScriptRoot $script:state}catch{if($script:uiReady){$status.Text='Venda salva; não foi possível atualizar o resumo mensal: '+$_.Exception.Message}}
 }
 function Run-Action([scriptblock]$Action) {
     $old = $script:state | ConvertTo-Json -Depth 8
@@ -106,26 +141,26 @@ function Label($Parent, $Text, $X, $Y, $W, $Size = 10, $H = 26) {
     $o.AutoSize = $false; $o.UseCompatibleTextRendering = $true; $o.Font = New-Object Drawing.Font('Segoe UI', $Size); $Parent.Controls.Add($o); return $o
 }
 function Button($Parent, $Text, $X, $Y, $W, [scriptblock]$Action) {
-    $o = New-Object Windows.Forms.Button; $o.Text = $Text; $o.SetBounds($X, $Y, $W, 36)
-    $o.FlatStyle = 'Flat'; $o.BackColor = $Theme.Surface; $o.ForeColor=$Theme.Wine
-    $o.FlatAppearance.BorderColor=$Theme.Line; $o.FlatAppearance.MouseOverBackColor=$Theme.Pink; $o.Add_Click($Action)
+    $o = New-Object BrandButton; $o.Text = $Text; $o.SetBounds($X, $Y, $W, 36)
+    $o.FlatStyle = 'Flat'; $o.BackColor = $Theme.Surface; $o.ForeColor=$Theme.Pink
+    $o.FlatAppearance.BorderColor=$Theme.Line; $o.FlatAppearance.MouseOverBackColor=$Theme.Hover; $o.Add_Click($Action)
     $Parent.Controls.Add($o); return $o
 }
 function Textbox($Parent, $X, $Y, $W) {
     $o = New-Object Windows.Forms.TextBox; $o.SetBounds($X, $Y, $W, 27); $o.BackColor=$Theme.Surface; $o.ForeColor=$Theme.Text; $o.BorderStyle='FixedSingle'
-    $o.Add_Enter({param($sender,$e) $sender.BackColor=$Theme.Pink}); $o.Add_Leave({param($sender,$e) $sender.BackColor=$Theme.Surface})
+    $o.Add_Enter({param($sender,$e) $sender.BackColor=$Theme.Focus}); $o.Add_Leave({param($sender,$e) $sender.BackColor=$Theme.Surface})
     $Parent.Controls.Add($o); return $o
 }
 function Numberbox($Parent, $X, $Y, $W, $Max = 100000) {
     $o = New-Object EmptyNumberBox; $o.Minimum = 0; $o.Maximum = $Max; $o.SetBounds($X, $Y, $W, 27); $o.Text = ''; $o.BackColor=$Theme.Surface; $o.ForeColor=$Theme.Text; $o.BorderStyle='FixedSingle'
-    $o.Add_Enter({param($sender,$e) $sender.BackColor=$Theme.Pink}); $o.Add_Leave({param($sender,$e) $sender.BackColor=$Theme.Surface})
+    $o.Add_Enter({param($sender,$e) $sender.BackColor=$Theme.Focus}); $o.Add_Leave({param($sender,$e) $sender.BackColor=$Theme.Surface})
     $Parent.Controls.Add($o); return $o
 }
 function Make-Group($Parent, $Text, $X, $Y, $W, $H) {
     $o = New-Object Windows.Forms.GroupBox; $o.Text = $Text; $o.SetBounds($X, $Y, $W, $H); $Parent.Controls.Add($o); return $o
 }
 function Radio($Parent, $Text, $X, $Y, $W) {
-    $o = New-Object ToggleRadioButton; $o.Text = $Text; $o.SetBounds($X, $Y, $W, 28); $o.ForeColor=$Theme.Wine; $o.FlatStyle='Flat'; $Parent.Controls.Add($o); return $o
+    $o = New-Object ToggleRadioButton; $o.Text = $Text; $o.SetBounds($X, $Y, $W, 28); $o.ForeColor=$Theme.Pink; $o.FlatStyle='Flat'; $Parent.Controls.Add($o); return $o
 }
 function Reset-Entry {
     $script:editingId = $null; $add.Text = 'Registrar venda'; $cancel.Visible = $false
@@ -204,6 +239,7 @@ function Update-EntryFeedback {
     else { $basketHint.Text = 'Informe as quantidades ou o valor do Shop e escolha o pagamento.' }
 }
 function Register-Basket {
+    if(Test-Path -LiteralPath (Get-ClosedShiftPath $PSScriptRoot $script:state)){throw 'Este turno já foi arquivado. Feche o turno ou reabra o aplicativo para começar outro.'}
     $newRows = @(); $batch = [guid]::NewGuid().ToString(); $at = (Get-Date).ToString('o')
     $other = @($script:state.Sales)
     if ($null -ne $script:editingId) {
@@ -257,8 +293,18 @@ function Load-Settings {
     $wdPacks.Value = [math]::Floor([long]$s.Stock.WD / 4); $wdLoose.Value = [long]$s.Stock.WD % 4
     $jdCount.Value = [long]$s.Stock.JD
     $sdPacks.Value = [math]::Floor([long]$s.Stock.SD / 4); $sdLoose.Value = [long]$s.Stock.SD % 4
+    $script:calendarShownDate=(Get-Date).ToString('yyyy-MM-dd')
+}
+function Refresh-CalendarDay([datetime]$Now) {
+    if($script:state.Settings.Ready -or -not $script:calendarShownDate){return}
+    $today=$Now.ToString('yyyy-MM-dd')
+    if($today -ne $script:calendarShownDate){
+        if($shiftDate.Value.ToString('yyyy-MM-dd') -eq $script:calendarShownDate){$shiftDate.Value=$Now.Date}
+        $script:calendarShownDate=$today
+    }
 }
 function Save-ShiftSettings {
+    if(Test-Path -LiteralPath (Get-ClosedShiftPath $PSScriptRoot $script:state)){throw 'Este turno já foi arquivado. Reabra o aplicativo para iniciar o próximo turno.'}
     $name = $nameBox.Text.Trim()
     if ($name -eq '' -or $name -match '[\r\n{}]') { throw 'Informe o nome do responsável em uma única linha.' }
     $stock = [pscustomobject]@{ WD = [long]($wdPacks.Value * 4 + $wdLoose.Value); JD = [long]$jdCount.Value; SD = [long]($sdPacks.Value * 4 + $sdLoose.Value) }
@@ -306,17 +352,49 @@ function Send-Report([string]$Text) {
     Start-Process ('https://wa.me/?text=' + [Uri]::EscapeDataString($Text))
     $status.Text = 'Escolha a conversa no WhatsApp e confirme o envio da mensagem.'
 }
-function Start-NewShift {
-    if ([Windows.Forms.MessageBox]::Show('Arquivar as vendas e começar um novo turno com estoque e totais zerados? O turno atual ficará salvo na pasta turnos.', 'Novo turno', 'YesNo', 'Question') -ne 'Yes') { return }
-    $archive = Join-Path $PSScriptRoot 'turnos'; $null = New-Item -ItemType Directory -Path $archive -Force
-    $prefix = Join-Path $archive (Get-Date -Format 'yyyy-MM-dd_HH-mm-ss-fff')
-    $script:state | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath ($prefix + '.json') -Encoding UTF8
-    (Get-Report $script:state.Sales) | Set-Content -LiteralPath ($prefix + '-hora.txt') -Encoding UTF8
-    try { (Get-ClosingReport $script:state) | Set-Content -LiteralPath ($prefix + '-fechamento.txt') -Encoding UTF8 } catch { }
+function Complete-Shift {
+    foreach($c in $entryRows.Keys){if((Row-Price $c) -gt 0 -or $entryRows[$c].Cash.Text.Trim() -ne '' -or $entryRows[$c].Card.Text.Trim() -ne ''){throw 'Há uma venda digitada. Registre a venda ou limpe os campos antes de fechar o turno.'}}
+    $null=Close-StoreShift $PSScriptRoot $script:state
     $oldName = $script:state.Settings.Name
     $script:state = New-State; $script:state.Settings.Name = $oldName
     Save-State; Reset-Entry; Refresh-View; Show-Setup
-    $status.Text = 'Novo turno. Preencha a data, o responsável e os estoques iniciais e clique em Salvar.'
+    $status.Text = 'Turno fechado e salvo no histórico. Tudo pronto para iniciar o próximo turno.'
+}
+function Start-NewShift {
+    if(-not $script:state.Settings.Ready){Show-Setup; return}
+    $total=Get-LedgerTotals @([pscustomobject]@{State=$script:state})
+    $message='Fechar o turno de '+$script:state.Settings.Date+' com total de '+(Format-Money $total.Total)+'? Depois de enviar seu fechamento, confirme para arquivar as vendas e preparar o próximo turno.'
+    if([Windows.Forms.MessageBox]::Show($message,'Fechar turno','YesNo','Question') -ne 'Yes'){return}
+    Complete-Shift
+}
+function Style-List($Control) {
+    $Control.BackColor=$Theme.Surface; $Control.ForeColor=$Theme.Text; $Control.OwnerDraw=$true; $Control.BorderStyle='FixedSingle'
+    $Control.Add_DrawColumnHeader({param($sender,$e)
+        $b=New-Object Drawing.SolidBrush($Theme.Wine)
+        try{$e.Graphics.FillRectangle($b,$e.Bounds)}finally{$b.Dispose()}
+        [Windows.Forms.TextRenderer]::DrawText($e.Graphics,$e.Header.Text,$sender.Font,$e.Bounds,$Theme.Pink,([Windows.Forms.TextFormatFlags]::Left -bor [Windows.Forms.TextFormatFlags]::VerticalCenter))
+    })
+    $Control.Add_DrawSubItem({param($sender,$e)
+        $bg=$Theme.Surface; if($e.Item.Selected){$bg=$Theme.Focus}
+        $b=New-Object Drawing.SolidBrush($bg)
+        try{$e.Graphics.FillRectangle($b,$e.Bounds)}finally{$b.Dispose()}
+        [Windows.Forms.TextRenderer]::DrawText($e.Graphics,$e.SubItem.Text,$sender.Font,$e.Bounds,$Theme.Text,([Windows.Forms.TextFormatFlags]::Left -bor [Windows.Forms.TextFormatFlags]::VerticalCenter))
+        if($e.Item.Focused){[Windows.Forms.ControlPaint]::DrawFocusRectangle($e.Graphics,$e.Bounds,$Theme.Pink,$bg)}
+    })
+}
+function Refresh-History {
+    if($null -eq $historyList){return}
+    $historyList.Items.Clear()
+    try{
+        $records=@(Get-StoreLedger $PSScriptRoot | Sort-Object Date -Descending)
+        foreach($record in $records){
+            $t=Get-LedgerTotals @($record)
+            $item=New-Object Windows.Forms.ListViewItem($record.Date.ToString('dd/MM/yyyy'))
+            foreach($value in @([string]$record.State.Settings.Name,(Format-Money $t.WD),(Format-Money $t.Shop),(Format-Money $t.Cinema),(Format-Money $t.Total))){$null=$item.SubItems.Add($value)}
+            $item.Tag=$record.Date; $null=$historyList.Items.Add($item)
+        }
+        $historyInfo.Text="$($records.Count) turnos fechados. WD inclui WD, JD e SD. Os arquivos ficam na pasta do aplicativo."
+    }catch{$historyInfo.Text=$_.Exception.Message}
 }
 $form = New-Object TrayForm
 $form.Text = 'Private Moments | Vendas e fechamento'
@@ -332,7 +410,7 @@ $menu.Renderer=New-Object BrandMenuRenderer; $menu.BackColor=$Theme.Wine; $menu.
 $shiftMenu = New-Object Windows.Forms.ToolStripMenuItem('Turno')
 $editShiftMenu = New-Object Windows.Forms.ToolStripMenuItem('Corrigir dados iniciais...')
 $editShiftMenu.Add_Click({ Run-Action { Show-Setup } })
-$newShiftMenu = New-Object Windows.Forms.ToolStripMenuItem('Novo turno...')
+$newShiftMenu = New-Object Windows.Forms.ToolStripMenuItem('Fechar turno / iniciar próximo...')
 $newShiftMenu.Add_Click({ Run-Action { Start-NewShift } })
 $null = $shiftMenu.DropDownItems.Add($editShiftMenu); $null = $shiftMenu.DropDownItems.Add($newShiftMenu)
 $null = $menu.Items.Add($shiftMenu); $form.MainMenuStrip = $menu; $form.Controls.Add($menu)
@@ -352,8 +430,15 @@ $tabs.DrawMode='OwnerDrawFixed'; $tabs.Add_DrawItem({param($sender,$e)
 $salesTab = New-Object Windows.Forms.TabPage; $salesTab.Text = 'Vendas e relatório por hora'
 $setupTab = New-Object Windows.Forms.TabPage; $setupTab.Text = 'Início do turno'
 $closingTab = New-Object Windows.Forms.TabPage; $closingTab.Text = 'Fechamento detalhado'
-foreach ($tab in @($setupTab, $salesTab, $closingTab)) { $tab.BackColor = $form.BackColor; $tabs.TabPages.Add($tab) }
-$totalsLabel = Label $salesTab '' 14 10 964 13 30
+$historyTab=New-Object Windows.Forms.TabPage; $historyTab.Text='Histórico e arquivos'
+foreach ($tab in @($setupTab, $salesTab, $closingTab,$historyTab)) { $tab.BackColor = $form.BackColor; $tabs.TabPages.Add($tab) }
+$summaryCards=@{}
+$x=14
+foreach($key in @('WD','Shop','Cinema','TOTAL')){
+    $card=Label $salesTab '' $x 8 232 12 32; $card.BackColor=$Theme.Surface; $card.TextAlign='MiddleCenter'
+    if($key -eq 'TOTAL'){$card.BackColor=$Theme.Wine; $card.ForeColor=$Theme.Pink}
+    $summaryCards[$key]=$card; $x+=242
+}
 $grid = New-Object Windows.Forms.TableLayoutPanel
 $grid.SetBounds(14,48,958,212); $grid.ColumnCount = 9; $grid.RowCount = 6
 $grid.CellBorderStyle = 'Single'; $grid.Margin = 0; $grid.Padding = 0; $grid.BackColor=$Theme.Canvas
@@ -405,6 +490,7 @@ $cancel = Button $salesTab 'Cancelar correção' 800 264 160 { Reset-Entry }; $c
 $list = New-Object Windows.Forms.ListView; $list.SetBounds(14, 306, 594, 126)
 $list.View = 'Details'; $list.FullRowSelect = $true; $list.MultiSelect = $false; $list.HideSelection = $false
 $list.BackColor=$Theme.Surface; $list.ForeColor=$Theme.Text
+Style-List $list
 foreach ($col in @(@('Hora', 74), @('Categoria', 78), @('Quantidade', 130), @('Dinheiro', 100), @('Cartão', 100), @('Total', 100))) { $null = $list.Columns.Add($col[0], $col[1]) }
 $salesTab.Controls.Add($list); $list.Add_DoubleClick({ Run-Action { Edit-Selected } })
 $report = Textbox $salesTab 626 306 346; $report.Height = 126; $report.Multiline = $true; $report.ReadOnly = $true
@@ -481,12 +567,32 @@ $null = Button $closingTab 'Salvar fechamento .txt' 519 442 235 {
         $dialog.Dispose()
     }
 }
+$historyInfo=Label $historyTab '' 16 14 950 10 52
+$historyList=New-Object Windows.Forms.ListView; $historyList.SetBounds(16,78,956,318); $historyList.View='Details'; $historyList.FullRowSelect=$true; $historyList.MultiSelect=$false
+foreach($col in @(@('Data do turno',140),@('Responsável',190),@('WD',145),@('Shop',145),@('Cinema',145),@('TOTAL',170))){$null=$historyList.Columns.Add($col[0],$col[1])}
+Style-List $historyList; $historyTab.Controls.Add($historyList)
+$null=Button $historyTab 'Abrir registro diário' 16 412 220 { Run-Action {
+    if($historyList.SelectedItems.Count -eq 0){throw 'Selecione um turno para abrir o registro do dia.'}
+    $file=Export-DailySales $PSScriptRoot ([datetime]$historyList.SelectedItems[0].Tag)
+    Start-Process -FilePath $file
+} }
+$monthPicker=New-Object Windows.Forms.DateTimePicker; $monthPicker.Format='Custom'; $monthPicker.CustomFormat='MMMM yyyy'; $monthPicker.ShowUpDown=$true; $monthPicker.SetBounds(252,416,208,27); $historyTab.Controls.Add($monthPicker)
+$null=Button $historyTab 'Resumo do mês (.txt)' 476 412 235 { Run-Action {
+    $file=Export-MonthlySales $PSScriptRoot $monthPicker.Value.ToString('yyyy-MM') $script:state
+    Start-Process -FilePath $file
+} }
+$null=Button $historyTab 'Abrir pasta do app' 727 412 245 { Start-Process -FilePath $PSScriptRoot }
+$null=Label $historyTab 'Resumo automático no último dia do mês: Vendas_AAAA-MM.txt. Registros diários: historico\diarios.' 16 460 956 9
 
-$null = Button $form 'Novo turno' 806 616 214 { Run-Action { Start-NewShift } }
+$closeShiftButton = Button $form 'Fechar turno' 806 616 214 { Run-Action { Start-NewShift } }
 $status = Label $form '' 22 660 996 9
 function Refresh-View {
     $t = Get-Totals $script:state.Sales
-    $totalsLabel.Text = "WD (WD + JD + SD): $(Format-Money ($t.WD + $t.JD + $t.SD))     Shop: $(Format-Money $t.Shop)     Cinema: $(Format-Money $t.Cinema)     TOTAL: $(Format-Money ($t.WD + $t.JD + $t.SD + $t.Shop + $t.Cinema))"
+    $summaryCards.WD.Text='WD · '+(Format-Money ($t.WD+$t.JD+$t.SD))
+    $summaryCards.Shop.Text='SHOP · '+(Format-Money $t.Shop)
+    $summaryCards.Cinema.Text='CINEMA · '+(Format-Money $t.Cinema)
+    $summaryCards.TOTAL.Text='TOTAL · '+(Format-Money ($t.WD+$t.JD+$t.SD+$t.Shop+$t.Cinema))
+    $closeShiftButton.Text='Iniciar turno'; if($script:state.Settings.Ready){$closeShiftButton.Text='Fechar turno'}
     $subtitle.Text = 'Acumulado do turno | ' + $script:state.Settings.Date + ' | ' + $script:state.Settings.Name + ' | 11.AM a 02.AM'
     $report.Text = Get-Report $script:state.Sales
     $list.BeginUpdate(); $list.Items.Clear()
@@ -507,6 +613,7 @@ function Refresh-View {
     else { $stockLabel.Text = 'Preencha o estoque inicial na aba Início do turno.' }
     try { $closingReport.Text = Get-ClosingReport $script:state }
     catch { $closingReport.Text = 'Fechamento aguardando dados:' + "`r`n`r`n" + $_.Exception.Message }
+    Refresh-History
 }
 $tray = New-Object Windows.Forms.NotifyIcon; $tray.Icon = $trayIcon
 $tray.Text = 'Private Moments — relatório por hora'; $tray.Visible = $true
@@ -548,7 +655,13 @@ $script:reminderPending = $false
 if ($null -eq $script:state.PSObject.Properties['LastReminder']) { $script:state | Add-Member -NotePropertyName LastReminder -NotePropertyValue '' }
 $clockLabel = Label $form '' 22 624 770 10
 $timer = New-Object Windows.Forms.Timer; $timer.Interval = 500
+$script:lastMonthlyDay=''
 function Check-Reminder([datetime]$Now) {
+    Refresh-CalendarDay $Now
+    if($script:lastMonthlyDay -ne $Now.ToString('yyyy-MM-dd')){
+        $script:lastMonthlyDay=$Now.ToString('yyyy-MM-dd')
+        try{Sync-MonthlySales $PSScriptRoot $script:state $Now}catch{$status.Text='Não foi possível gerar o resumo mensal: '+$_.Exception.Message}
+    }
     $next = Get-NextReminder $script:state.Settings $Now
     $schedule = 'Cadastre o início do turno para ativar os lembretes.'
     if ($null -ne $next) { $schedule = 'Próximo: ' + (Get-ReminderText $next) }
@@ -572,7 +685,7 @@ function Check-Reminder([datetime]$Now) {
     $tray.ShowBalloonTip(15000)
 }
 $timer.Add_Tick({ Check-Reminder (Get-Date) })
-$form.Add_Activated({ if ($script:reminderPending) { Acknowledge-Reminder } })
+$form.Add_Activated({ Refresh-CalendarDay (Get-Date); if ($script:reminderPending) { Acknowledge-Reminder } })
 $form.Add_FormClosing({ param($sender, $e)
     try { Save-State }
     catch { $e.Cancel = $true; [Windows.Forms.MessageBox]::Show("Não foi possível salvar. $($_.Exception.Message)", 'Erro ao salvar') | Out-Null; return }

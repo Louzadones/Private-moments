@@ -1,4 +1,15 @@
-SWEET SENSATION — V4
+SWEET SENSATION — V5
+
+NOVO VISUAL E HISTÓRICO
+Interface escura e ícone S próprio na barra de tarefas.
+Após enviar o último relatório, clique em Fechar turno. O app grava os dados,
+o fechamento e o registro diário, e fica pronto para iniciar o próximo turno.
+Histórico e arquivos permite consultar turnos e abrir os relatórios em texto.
+Registros diários: historico/diarios/Vendas_AAAA-MM-DD.txt.
+Registro mensal: Vendas_AAAA-MM.txt na pasta do aplicativo. Ele soma WD
+(incluindo JD e SD), Shop e Cinema. Gera no último dia do mês enquanto o app
+estiver aberto; se perdeu a virada, gera ao abrir de novo. Inclui turnos antigos
+arquivados e evita contar o mesmo turno duas vezes. Preserve a pasta historico.
 
 Extraia TODOS os arquivos do ZIP para uma pasta própria e abra Sweet Sensation.exe.
 Mantenha a pasta assets junto dos arquivos. Requer Windows, Windows PowerShell 5.1
@@ -54,4 +65,4 @@ DADOS SEPARADOS
 Use esta loja em uma pasta exclusiva. Cada pasta possui seu próprio dados.json,
 backup e turnos arquivados. Não copie dados de outra loja para esta pasta.
 O aplicativo pode funcionar ao mesmo tempo que a versão da outra loja.
-Novo turno arquiva o atual e zera vendas/estoques após confirmação.
+Fechar turno arquiva o atual e prepara o próximo após confirmação.

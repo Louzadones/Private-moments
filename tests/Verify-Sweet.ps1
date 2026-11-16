@@ -147,17 +147,47 @@ Assert ((Get-DueReminder $nightSettings (Get-ReminderCheckpoint $reopened) $reop
 Assert ($null -eq (Get-DueReminder $nightSettings (Get-ReminderCheckpoint $reopened) $reopened '2026-11-10T01:00:00')) 'Reopening must not repeat acknowledged current hour'
 Assert ($null -eq (Get-DueReminder $settings ([datetime]'2026-11-10T01:59:00') ([datetime]'2026-11-10T14:00:00') '')) 'Do not show an old closing reminder in the afternoon'
 Assert ((Get-DueReminder $settings ([datetime]'2026-11-09T12:00:00') ([datetime]'2026-11-09T15:40:00') '').Hour -eq 15) 'Resuming must use current hour only'
+$ledgerRoot=Join-Path $PSScriptRoot ('qa-ledger-'+[guid]::NewGuid().ToString('N'))
+$null=New-Item -ItemType Directory -Path $ledgerRoot
+$dayOne=New-State; $dayOne.Settings.Ready=$true; $dayOne.Settings.Date='2026-11-29'; $dayOne.Settings.Stock.WD=40
+$dayOne.Started='2026-11-29T11:00:00+00:00'; $dayOne.Sales=@((Sale 'WD' 'Cash' 18000 20),(Sale 'Shop' 'Card' 5000))
+$closedPath=Close-StoreShift $ledgerRoot $dayOne ([datetime]'2026-11-29T23:00:00')
+Assert (Test-Path -LiteralPath (Join-Path $ledgerRoot 'historico/diarios/Vendas_2026-11-29.txt')) 'Closing must save a daily text record'
+Assert (-not(Test-Path -LiteralPath (Join-Path $ledgerRoot 'Vendas_2026-11.txt'))) 'Current month exports automatically only on its last day'
+$dayTwo=New-State; $dayTwo.Settings.Ready=$true; $dayTwo.Settings.Date='2026-11-30'; $dayTwo.Started='2026-11-30T11:00:00+00:00'
+$dayTwo.Sales=@((Sale 'Cinema' 'Card' 3000 2))
+Sync-MonthlySales $ledgerRoot $dayTwo ([datetime]'2026-11-30T23:00:00')
+$monthPath=Join-Path $ledgerRoot 'Vendas_2026-11.txt'
+$monthText=Get-Content -LiteralPath $monthPath -Raw -Encoding UTF8
+Assert ($monthText.Contains('WD: €180') -and $monthText.Contains('Shop: €50') -and $monthText.Contains('Cinema: €30') -and $monthText.Contains('TOTAL:  €260')) 'Month must aggregate archived and active shift amounts'
+$null=Close-StoreShift $ledgerRoot $dayTwo ([datetime]'2026-12-01T02:00:00')
+$null=Close-StoreShift $ledgerRoot $dayTwo ([datetime]'2026-12-01T02:00:01')
+Assert (@(Get-StoreLedger $ledgerRoot $dayTwo).Count -eq 2) 'Closing or retrying must never double count a shift'
+Assert ((Get-Content -LiteralPath $monthPath -Raw -Encoding UTF8).Contains('TOTAL:  €260')) 'Month totals must remain stable after closing and retries'
+$legacyArchive=Join-Path $ledgerRoot 'turnos'
+$null=New-Item -ItemType Directory -Path $legacyArchive
+$legacyCopy=($dayOne | ConvertTo-Json -Depth 10) | ConvertFrom-Json
+$legacyCopy.PSObject.Properties.Remove('ShiftId')
+$legacyCopy | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $legacyArchive 'legacy.json') -Encoding UTF8
+Assert (@(Get-StoreLedger $ledgerRoot).Count -eq 2) 'Legacy archives duplicated by newer history must not count twice'
+$recoveryRoot=Join-Path $PSScriptRoot ('qa-ledger-'+[guid]::NewGuid().ToString('N'))
+$null=Close-StoreShift $recoveryRoot $dayOne ([datetime]'2026-11-29T23:00:00')
+Sync-MonthlySales $recoveryRoot $null ([datetime]'2026-12-02T11:00:00')
+Assert (Test-Path -LiteralPath (Join-Path $recoveryRoot 'Vendas_2026-11.txt')) 'Opening in next month must recover missed month-end export'
+Sync-MonthlySales $recoveryRoot $null ([datetime]'2026-12-31T23:00:00')
+Assert ((Get-Content -LiteralPath (Join-Path $recoveryRoot 'Vendas_2026-12.txt') -Raw -Encoding UTF8).Contains('TOTAL:  €0')) 'Last day must produce an empty month summary too'
 $smoke = Join-Path $PSScriptRoot ('qa-' + [guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $smoke
-foreach($name in @('Sweet Sensation.exe','Sweet Sensation.ps1','Core.ps1','Fechamento.txt','LEIA-ME.txt','assets')) {
+foreach($name in @('Sweet Sensation.exe','Sweet Sensation.ps1','Core.ps1','History.ps1','Fechamento.txt','LEIA-ME.txt','assets')) {
     Copy-Item -LiteralPath (Join-Path $source $name) -Destination $smoke -Recurse
 }
 $script = Get-Content -LiteralPath (Join-Path $source 'Sweet Sensation.ps1') -Raw -Encoding UTF8
 $replacement = @'
 $form.Show(); [Windows.Forms.Application]::DoEvents()
+if([Diagnostics.Process]::GetCurrentProcess().ProcessName -ne 'Sweet Sensation'){throw 'Actual window process must be branded executable, not powershell.exe'}
 if($form.Icon.Width -ne 32 -or $tray.Icon.Width -ne 16){throw 'App and tray must use correctly sized branded icons'}
 if($Theme.Wine.ToArgb() -ne [Drawing.ColorTranslator]::FromHtml('#590027').ToArgb() -or $Theme.Pink.ToArgb() -ne [Drawing.ColorTranslator]::FromHtml('#F7A6CE').ToArgb()){throw 'Brand palette is incorrect'}
-if($entryRows.WD.CashRadio.ForeColor.ToArgb() -ne $Theme.Wine.ToArgb()){throw 'Payment controls must use brand palette'}
+if($entryRows.WD.CashRadio.ForeColor.ToArgb() -ne $Theme.Pink.ToArgb()){throw 'Payment controls must use brand palette'}
 if ($wdPacks.Text -ne '' -or $jdCount.Text -ne '' -or $sdPacks.Text -ne '') { throw 'Initial zero fields must be blank' }
 if (-not ($wdPacks.Top -lt $jdCount.Top -and $jdCount.Top -lt $sdPacks.Top)) { throw 'Initial stock order incorrect' }
 if (-not ($wdPacks.TabIndex -lt $wdLoose.TabIndex -and $wdLoose.TabIndex -lt $jdCount.TabIndex -and $jdCount.TabIndex -lt $sdPacks.TabIndex -and $sdPacks.TabIndex -lt $sdLoose.TabIndex)) { throw 'Tab order incorrect' }; $wdLoose.Focus() | Out-Null; $form.SelectNextControl($wdLoose, $true, $true, $true, $true) | Out-Null; if (-not $jdCount.Focused) { throw 'Tab from WD loose did not go to JD' }; $form.SelectNextControl($jdCount, $true, $true, $true, $true) | Out-Null; if (-not $sdPacks.Focused) { throw 'Tab from JD did not go to SD packs' }; $form.SelectNextControl($sdPacks, $true, $true, $true, $true) | Out-Null; if (-not $sdLoose.Focused) { throw 'Tab from SD packs did not go to SD loose' }; $wdPacks.Text = '59'; if ($wdPacks.Value -ne 59) { throw 'Typed quantity not parsed' }; $wdPacks.Value = 59; $wdLoose.Value = 2; $jdCount.Value = 42; $sdPacks.Value = 3
@@ -270,6 +300,12 @@ if ($entryRows.Shop.Cash.Text -ne '12,34' -or $script:state.Sales.Count -ne 5) {
 $openTrayItem.PerformClick()
 if (-not $form.Visible -or $entryRows.Shop.Cash.Text -ne '12,34') { throw 'Tray restore lost draft' }
 $form.Close()
+$duplicate=Start-Process -FilePath (Join-Path $PSScriptRoot 'Sweet Sensation.exe') -PassThru -WindowStyle Hidden
+$duplicateDeadline=(Get-Date).AddSeconds(8)
+while(-not $duplicate.HasExited -and (Get-Date) -lt $duplicateDeadline){[Windows.Forms.Application]::DoEvents(); Start-Sleep -Milliseconds 25; $duplicate.Refresh()}
+if(-not $duplicate.HasExited){$duplicate.Kill();throw 'Second executable launch did not finish'}
+if(-not $form.Visible -or $entryRows.Shop.Cash.Text -ne '12,34'){throw 'Second executable launch must restore existing app without losing draft'}
+$form.Close()
 $null=[TaskbarAlert]::Restore($form.Handle)
 if (-not $form.Visible) { throw 'Opening executable again must restore the hidden managed window' }
 $form.Close()
@@ -277,6 +313,17 @@ $script:lastCheck=[datetime]'2026-11-10T00:59:59'; $script:state.LastReminder=''
 Check-Reminder ([datetime]'2026-11-10T01:00:00')
 if (-not $form.Visible -or -not $script:reminderPending) { throw 'Hidden app reminder must return to taskbar' }
 Acknowledge-Reminder
+Reset-Entry
+Complete-Shift
+if($script:state.Settings.Ready -or $script:state.Sales.Count -ne 0 -or $tabs.SelectedTab -ne $setupTab){throw 'Close shift must reset and prepare next shift'}
+if($historyList.Items.Count -ne 1){throw 'Closed shift must appear in history'}
+$nextCalendarDay=$shiftDate.Value.Date.AddDays(1)
+$wdPacks.Value=2
+Refresh-CalendarDay $nextCalendarDay
+if($shiftDate.Value.Date -ne $nextCalendarDay -or $wdPacks.Value -ne 2){throw 'Next-day calendar refresh must preserve typed stock'}
+$wdPacks.Value=0; Load-Settings
+$tabs.SelectedTab=$historyTab; Capture 'historico.png'
+$tabs.SelectedTab=$setupTab; Capture 'proximo-turno.png'
 $script:allowExit=$true
 $form.Close()
 if (-not $form.IsDisposed) { throw 'Explicit quit must close app' }
@@ -284,17 +331,26 @@ if (-not $form.IsDisposed) { throw 'Explicit quit must close app' }
 $qaMutex='Local\SweetSensationQA-' + [guid]::NewGuid().ToString('N')
 $script = $script.Replace('Local\SweetSensationSalesApp', $qaMutex)
 Assert ($script.Contains($qaMutex)) 'UI tests must use an isolated mutex even when the real store app is running'
+$qaTitle='Sweet Sensation QA '+[guid]::NewGuid().ToString('N')
+$script=$script.Replace('Sweet Sensation | Vendas e fechamento',$qaTitle)
 $script = $script.Replace('[Windows.Forms.Application]::Run($form)', $replacement)
 $script = $script.Replace("[Windows.Forms.MessageBox]::Show(`$_.Exception.Message, 'Confira os dados') | Out-Null", 'throw')
 $script = $script.Replace("[Windows.Forms.MessageBox]::Show(`$_.Exception.Message, 'Erro no aplicativo') | Out-Null", 'throw')
 $script = "try {`r`n" + $script + "`r`n'PASS' | Set-Content -LiteralPath (Join-Path `$PSScriptRoot 'qa-result.txt')`r`n} catch { (`$_ | Out-String) | Set-Content -LiteralPath (Join-Path `$PSScriptRoot 'qa-result.txt') }"
 [IO.File]::WriteAllText((Join-Path $smoke 'Sweet Sensation.ps1'), $script, (New-Object Text.UTF8Encoding($true)))
-$launcher = Start-Process -FilePath (Join-Path $smoke 'Sweet Sensation.exe') -PassThru -Wait
+$previousTestMode=$env:PRIVATE_MOMENTS_TEST_MODE
+try{
+    $env:PRIVATE_MOMENTS_TEST_MODE='1'
+    $launcher = Start-Process -FilePath (Join-Path $smoke 'Sweet Sensation.exe') -PassThru -Wait
+}finally{$env:PRIVATE_MOMENTS_TEST_MODE=$previousTestMode}
+if($launcher.ExitCode -ne 0){throw (Get-Content -LiteralPath (Join-Path $smoke 'app-error.log') -Raw -ErrorAction SilentlyContinue)}
 $deadline = (Get-Date).AddSeconds(25); $resultPath = Join-Path $smoke 'qa-result.txt'
 while (-not (Test-Path -LiteralPath $resultPath) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 100 }
 Assert (Test-Path -LiteralPath $resultPath) 'UI test timeout'
 $result = Get-Content -LiteralPath $resultPath -Raw
 Assert ($result.Trim() -eq 'PASS') $result
 $saved = Get-Content -LiteralPath (Join-Path $smoke 'dados.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-Assert ($saved.Sales.Count -eq 5 -and (Get-RemainingStock $saved).WD -eq 232) 'Persistence'
+Assert ($saved.Sales.Count -eq 0 -and -not $saved.Settings.Ready) 'Closed shift must persist as ready for next opening'
+$closed=@(Get-StoreLedger $smoke)
+Assert ($closed.Count -eq 1 -and $closed[0].State.Sales.Count -eq 5 -and (Get-RemainingStock $closed[0].State).WD -eq 232) 'Closed shift must preserve registered sales and final stock'
 "PASS: prices, JD combinations, multi-category basket, split payments, exact closing template, inventory, editing, reminder boundaries, taskbar API and persistence. Screenshots: $smoke"

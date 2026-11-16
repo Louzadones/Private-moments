@@ -4,9 +4,9 @@ Aplicativo para Windows que registra vendas, controla estoque e prepara os relat
 
 ## Usar
 
-Baixe [Private-Moments-V16.zip](releases/Private-Moments-V16.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Mantenha a pasta `assets` junto ao aplicativo. Só a janela do aplicativo aparece.
+Baixe [Private-Moments-V17.zip](releases/Private-Moments-V17.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Mantenha a pasta `assets` junto ao aplicativo. Só a janela do aplicativo aparece. A interface roda no próprio executável, com ícone e identidade próprios na barra de tarefas.
 
-A segunda loja tem seu próprio pacote: [Sweet-Sensation-V4.zip](releases/Sweet-Sensation-V4.zip). Extraia em outra pasta e abra **Sweet Sensation.exe**. Ela tem logo S, nome e relatórios próprios. Cinema custa **€15 no Sweet Sensation** e **€18 no Private Moments**. As duas versões podem funcionar ao mesmo tempo, cada uma com seus arquivos de vendas, estoque e turnos. Não misture os arquivos `dados.json` das lojas.
+A segunda loja tem seu próprio pacote: [Sweet-Sensation-V5.zip](releases/Sweet-Sensation-V5.zip). Extraia em outra pasta e abra **Sweet Sensation.exe**. Ela tem logo S, nome e relatórios próprios. Cinema custa **€15 no Sweet Sensation** e **€18 no Private Moments**. As duas versões podem funcionar ao mesmo tempo, cada uma com seus arquivos de vendas, estoque e turnos. Não misture os arquivos `dados.json` das lojas.
 
 Promoções nos dois apps: **5 pacotes de WD (20 comprimidos) por €180** e **7 JD por €90**. WD usa automaticamente grupos de 5 pacotes, com os pacotes restantes a €50 e avulsos a €15: 6 pacotes = €230, 10 = €360. A baixa continua sendo pela quantidade real vendida. Valores de vendas já salvas não são alterados retroativamente.
 
@@ -43,7 +43,22 @@ O **X** esconde a janela silenciosamente no ícone perto do relógio, mantendo o
 
 Para encerrar de verdade, clique com o botão direito no ícone e escolha **Sair do aplicativo** (também disponível no menu Turno). As vendas registradas são gravadas em disco e reaparecem ao abrir novamente. A saída explícita confirma que campos ainda não registrados serão descartados; o X apenas os mantém na janela escondida. Encerrar o Windows encerra o processo normalmente.
 
-Os arquivos `dados.json`, `dados.backup.json` e a pasta `turnos/` ficam junto ao aplicativo. Contêm informações financeiras e estão excluídos do Git. Não há sincronização entre computadores.
+Os arquivos `dados.json`, `dados.backup.json`, `Vendas_*.txt` e as pastas de histórico ficam junto ao aplicativo. Contêm informações financeiras e estão excluídos do Git. Não há sincronização entre computadores.
+
+## Fechar turno, histórico diário e mensal
+
+Depois de enviar o último relatório, clique em **Fechar turno**. A confirmação informa a data e o total. Campos com venda ainda digitada impedem fechar até registrar ou limpar. O app salva o turno, seu fechamento e o resumo diário, e prepara o início do próximo turno. Reabrir depois mostra o calendário atual e os campos de estoque para o novo dia. Se não fechou o turno, o aplicativo conserva os registros em andamento.
+
+- `historico/turnos/<id>.json`: dados completos de cada turno fechado.
+- `historico/fechamentos/Fechamento_AAAA-MM-DD_<id>.txt`: fechamento detalhado.
+- `historico/diarios/Vendas_AAAA-MM-DD.txt`: totais de WD, Shop, Cinema e TOTAL para os turnos fechados naquele dia de abertura.
+- `Vendas_AAAA-MM.txt`: registro mensal na pasta principal, pronto para abrir no Bloco de Notas. Exemplo: `Vendas_2026-11.txt`.
+
+No último dia do mês, o app gera e mantém atualizado o registro mensal, incluindo o turno atual. Ao fechar o turno de madrugada, o valor continua pertencendo ao mês de abertura. Se o app estava fechado na virada do mês, gera o arquivo pendente ao reabrir. O app precisa estar aberto para executar a gravação no próprio último dia; não instala serviço ou tarefa agendada no Windows.
+
+A aba **Histórico e arquivos** lista os turnos fechados e permite abrir o diário ou gerar um resumo de qualquer mês. A linha WD soma WD + JD + SD, como no relatório por hora. O histórico antigo em `turnos/*.json` também é usado; turnos repetidos são desduplicados. Valores anteriores não são recalculados pelos preços atuais. Arquivos inválidos geram uma mensagem, em vez de serem ignorados silenciosamente.
+
+O fechamento é identificado por um ID estável: repetir uma tentativa não soma o mesmo turno duas vezes. Um reinício entre arquivar e preparar o próximo turno recupera o estado de início sem perder o turno salvo. As gravações substituem arquivos de forma atômica, com cópia `.backup` quando há uma versão anterior.
 
 Para atualizar mantendo o turno, feche a versão anterior e copie seu `dados.json` para a pasta nova antes de abrir. Não substitua dados de outro turno. As vendas anteriores mantêm seus valores históricos; editar uma linha aplica os preços atuais. Dados da V1 precisam ter pagamentos e quantidades completados.
 
@@ -52,7 +67,8 @@ Para atualizar mantendo o turno, feche a versão anterior e copie seu `dados.jso
 A identidade visual usa o P com beijo escolhido pelo usuário, vinho `#590027` e rosa `#F7A6CE`. O fundo da logo foi finalizado por código para ter cor uniforme. A marca aparece no executável, janela, cabeçalho e ícone de notificação. A interface usa essa paleta com superfícies claras para leitura. Os controles do sistema operacional mantêm suas convenções de plataforma.
 
 - `app/`: aplicativo e regras de negócio em PowerShell/Windows Forms.
-- `src/Launcher.cs`: código do executável que inicia o aplicativo sem console.
+- `src/Launcher.cs`: executável Windows que hospeda o motor PowerShell em sua própria thread STA. A janela pertence ao aplicativo, em vez de a `powershell.exe`, e usa seu ícone e AppUserModelID.
+- `app/History.ps1`: fechamento idempotente, histórico diário e exportação mensal, com importação dos arquivos antigos.
 - `src/LogoAssets.cs` e `src/Build-Logo.ps1`: finalização da logo em duas cores e geração de ICO com tamanhos de 16 a 256 pixels. Execute `src/Build-Logo.ps1` no Windows PowerShell para regenerar a partir de `src/logo-reference.png`.
 - `app/assets/`: logo PNG e ícone ICO usados na interface e incorporados ao executável.
 - `tests/Verify.ps1`: cálculos, estoque, pagamentos, relatórios, lembretes e interação com a interface, usando dados sintéticos em pastas isoladas.
