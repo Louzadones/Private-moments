@@ -48,6 +48,7 @@ public class ToggleRadioButton : RadioButton {
  }
 }
 public class BrandButton : Button {
+ public BrandButton(){ Cursor=Cursors.Hand; }
  private bool hover;
  protected override void OnMouseEnter(EventArgs e){hover=true;base.OnMouseEnter(e);Invalidate();}
  protected override void OnMouseLeave(EventArgs e){hover=false;base.OnMouseLeave(e);Invalidate();}
@@ -57,10 +58,11 @@ public class BrandButton : Button {
   if(bg.IsEmpty) bg=BackColor;
   using(SolidBrush parent=new SolidBrush(Parent==null ? BackColor : Parent.BackColor)) e.Graphics.FillRectangle(parent,ClientRectangle);
   using(System.Drawing.Drawing2D.GraphicsPath path=new System.Drawing.Drawing2D.GraphicsPath()){
-   int w=Width-1,h=Height-1,r=8;
+   int w=Width-3,h=Height-4,r=8;
    path.AddArc(0,0,r,r,180,90);path.AddArc(w-r,0,r,r,270,90);path.AddArc(w-r,h-r,r,r,0,90);path.AddArc(0,h-r,r,r,90,90);path.CloseFigure();
+   using(System.Drawing.Drawing2D.Matrix offset=new System.Drawing.Drawing2D.Matrix()){ offset.Translate(1,2); path.Transform(offset); using(SolidBrush shadow=new SolidBrush(Color.FromArgb(38,89,0,39))) e.Graphics.FillPath(shadow,path); offset.Reset(); offset.Translate(-1,-2); path.Transform(offset); }
    using(SolidBrush fill=new SolidBrush(bg)) e.Graphics.FillPath(fill,path);
-   if(FlatAppearance.BorderSize>0) using(Pen border=new Pen(FlatAppearance.BorderColor,1)) e.Graphics.DrawPath(border,path);
+   if(FlatAppearance.BorderSize>0) using(Pen border=new Pen(FlatAppearance.BorderColor,FlatAppearance.BorderSize)) e.Graphics.DrawPath(border,path);
   }
   Color fg=Enabled ? ForeColor : ColorTranslator.FromHtml("#72636C");
   TextRenderer.DrawText(e.Graphics,Text,Font,ClientRectangle,fg,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
@@ -79,7 +81,7 @@ public class TrayForm : Form {
 "@
 [Windows.Forms.Application]::EnableVisualStyles()
 $script:Theme=@{}
-foreach($entry in @{Wine='#590027';Pink='#F7A6CE';Canvas='#FFFFFF';Surface='#FFFFFF';Text='#241B21';Muted='#72636C';Line='#EADFE6';Error='#B3214F';Disabled='#F2EAF0';Hover='#D98CAD';Focus='#E5A0BA'}.GetEnumerator()){
+foreach($entry in @{Wine='#590027';Pink='#F7A6CE';Canvas='#FFFFFF';Surface='#FFFFFF';Text='#241B21';Muted='#72636C';Line='#B87795';Input='#FFF5F9';Button='#F1D5E1';Error='#B3214F';Disabled='#F2EAF0';Hover='#D98CAD';Focus='#E5A0BA'}.GetEnumerator()){
     $script:Theme[$entry.Key]=[Drawing.ColorTranslator]::FromHtml($entry.Value)
 }
 . (Join-Path $PSScriptRoot 'Core.ps1')
@@ -142,18 +144,18 @@ function Label($Parent, $Text, $X, $Y, $W, $Size = 10, $H = 26) {
 }
 function Button($Parent, $Text, $X, $Y, $W, [scriptblock]$Action) {
     $o = New-Object BrandButton; $o.Text = $Text; $o.SetBounds($X, $Y, $W, 36)
-    $o.FlatStyle = 'Flat'; $o.BackColor = $Theme.Surface; $o.ForeColor=$Theme.Wine
-    $o.FlatAppearance.BorderColor=$Theme.Line; $o.FlatAppearance.MouseOverBackColor=$Theme.Hover; $o.Add_Click($Action)
+    $o.FlatStyle = 'Flat'; $o.BackColor = $Theme.Button; $o.ForeColor=$Theme.Wine
+    $o.FlatAppearance.BorderSize=2; $o.FlatAppearance.BorderColor=$Theme.Line; $o.FlatAppearance.MouseOverBackColor=$Theme.Hover; $o.Add_Click($Action)
     $Parent.Controls.Add($o); return $o
 }
 function Textbox($Parent, $X, $Y, $W) {
-    $o = New-Object Windows.Forms.TextBox; $o.SetBounds($X, $Y, $W, 27); $o.BackColor=$Theme.Surface; $o.ForeColor=$Theme.Text; $o.BorderStyle='FixedSingle'
-    $o.Add_Enter({param($sender,$e) $sender.BackColor=$Theme.Focus}); $o.Add_Leave({param($sender,$e) $sender.BackColor=$Theme.Surface})
+    $o = New-Object Windows.Forms.TextBox; $o.SetBounds($X, $Y, $W, 27); $o.BackColor=$Theme.Input; $o.ForeColor=$Theme.Text; $o.BorderStyle='FixedSingle'
+    $o.Add_Enter({param($sender,$e) $sender.BackColor=$Theme.Focus}); $o.Add_Leave({param($sender,$e) $sender.BackColor=$Theme.Input})
     $Parent.Controls.Add($o); return $o
 }
 function Numberbox($Parent, $X, $Y, $W, $Max = 100000) {
-    $o = New-Object EmptyNumberBox; $o.Minimum = 0; $o.Maximum = $Max; $o.SetBounds($X, $Y, $W, 27); $o.Text = ''; $o.BackColor=$Theme.Surface; $o.ForeColor=$Theme.Text; $o.BorderStyle='FixedSingle'
-    $o.Add_Enter({param($sender,$e) $sender.BackColor=$Theme.Focus}); $o.Add_Leave({param($sender,$e) $sender.BackColor=$Theme.Surface})
+    $o = New-Object EmptyNumberBox; $o.Minimum = 0; $o.Maximum = $Max; $o.SetBounds($X, $Y, $W, 27); $o.Text = ''; $o.BackColor=$Theme.Input; $o.ForeColor=$Theme.Text; $o.BorderStyle='FixedSingle'
+    $o.Add_Enter({param($sender,$e) $sender.BackColor=$Theme.Focus}); $o.Add_Leave({param($sender,$e) $sender.BackColor=$Theme.Input})
     $Parent.Controls.Add($o); return $o
 }
 function Make-Group($Parent, $Text, $X, $Y, $W, $H) {
