@@ -1,5 +1,6 @@
 ﻿# Presentation only: the existing controls retain all validation and persistence handlers.
 function Show-StockMessage([switch]$Update) {
+    $Update = @($script:state.Restocks | Where-Object { $null -ne $_ }).Count -gt 0
     if(-not $script:state.Settings.Ready){throw 'Salve os dados iniciais do turno primeiro.'}
     $dialog=New-Object Windows.Forms.Form
     $dialog.Text='Estoque para WhatsApp'; $dialog.ClientSize=New-Object Drawing.Size(440,255)
@@ -62,18 +63,20 @@ $brandName.Font=New-Object Drawing.Font('Segoe UI',10,[Drawing.FontStyle]::Bold)
 $brandName.ForeColor=$Theme.Wine
 $brandCaption=Label $side 'CONTROLE DA LOJA' 73 54 140 8 22; $brandCaption.ForeColor=$Theme.Muted
 $script:navButtons=@{}
-$navY=116
+$setupNav=Button $side 'Começar turno' 12 116 196 { Run-Action { Show-Setup } }
+$setupNav.Height=48; $setupNav.Tag=$setupTab
+$script:navButtons['Começar turno']=$setupNav
+$navY=176
 foreach($definition in @(@('Vendas e relatórios',$salesTab),@('Fechamento detalhado',$closingTab),@('Histórico',$historyTab))){
     $nav=Button $side $definition[0] 12 $navY 196 {}
     $nav.Height=48; $nav.Tag=$definition[1]; $nav.FlatAppearance.BorderSize=2
     $nav.Add_Click({param($sender,$e) $tabs.SelectedTab=$sender.Tag})
     $script:navButtons[$definition[0]]=$nav; $navY+=60
 }
-$restockNav=Button $side 'Entrada de estoque' 12 330 196 { Run-Action { Show-Restock } }; $restockNav.Height=44
-$initialNav=Button $side 'Texto do estoque inicial' 12 386 196 { Run-Action { Show-StockMessage } }; $initialNav.Height=44
-$updateNav=Button $side 'Texto Update atual' 12 442 196 { Run-Action { Show-StockMessage -Update } }; $updateNav.Height=44
-$setupNav=Button $side 'Turno e estoque' 12 627 196 { Run-Action { Show-Setup } }
-$setupNav.Anchor='Bottom,Left'; $setupNav.FlatAppearance.BorderSize=2
+$restockNav=Button $setupTab 'Entrada de estoque' 20 500 250 { Run-Action { Show-Restock } }
+$initialNav=Button $setupTab 'Ver texto para copiar' 290 500 240 { Run-Action { Show-StockMessage } }
+$stockHelp=Label $setupTab 'Sem entrada: texto inicial. Após reabastecer: texto Update com o estoque disponível.' 20 549 940 10 35
+$stockHelp.ForeColor=$Theme.Muted
 $exitNav=Button $side 'Sair do aplicativo' 12 669 196 { Request-Exit }
 $exitNav.Anchor='Bottom,Left'; $exitNav.FlatAppearance.BorderSize=2
 $localLabel=Label $side '●  100% local' 20 740 180 10 24; $localLabel.Anchor='Bottom,Left'; $localLabel.ForeColor=$Theme.Wine
@@ -91,7 +94,7 @@ function Update-Navigation {
     $pageDescription.Text='Registre as vendas e acompanhe seu turno em um só lugar.'
     if($tabs.SelectedTab -eq $closingTab){$pageTitle.Text='Seu fechamento, conferido.'; $pageDescription.Text='Revise os valores, envie o relatório e encerre seu turno.'}
     if($tabs.SelectedTab -eq $historyTab){$pageTitle.Text='Seu histórico, organizado.'; $pageDescription.Text='Consulte seus dias e acompanhe o total vendido no mês.'}
-    if($tabs.SelectedTab -eq $setupTab){$pageTitle.Text='Prepare seu turno.'; $pageDescription.Text='Informe o responsável e o estoque inicial. Depois, é só registrar as vendas.'}
+    if($tabs.SelectedTab -eq $setupTab){$pageTitle.Text='Começar turno'; $pageDescription.Text='Informe o responsável e o estoque inicial. Depois, é só registrar as vendas.'}
 }
 $tabs.Add_SelectedIndexChanged({Update-Navigation})
 
