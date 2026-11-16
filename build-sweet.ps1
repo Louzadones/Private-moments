@@ -5,7 +5,7 @@ $null=New-Item -ItemType Directory -Path $destination -Force
 function Convert-StoreText([string]$Text){
     return $Text.Replace('Private Moments','Sweet Sensation').Replace('PRIVATE MOMENTS','SWEET SENSATION').Replace('PrivateMoments','SweetSensation').Replace('private-moments','sweet-sensation').Replace('return [long]1800','return [long]1500').Replace('Cinema: €18','Cinema: €15')
 }
-foreach($name in @('Private Moments.ps1','Core.ps1','History.ps1','Fechamento.txt')){
+foreach($name in @('Private Moments.ps1','Core.ps1','History.ps1','LightLayout.ps1','Fechamento.txt')){
     $text=Get-Content -LiteralPath (Join-Path $PSScriptRoot "app/$name") -Raw -Encoding UTF8
     $target=Join-Path $destination ($name.Replace('Private Moments','Sweet Sensation'))
     [IO.File]::WriteAllText($target,(Convert-StoreText $text),(New-Object Text.UTF8Encoding($true)))
@@ -27,6 +27,6 @@ $tests=$tests.Replace("-eq 5400) 'Cinema price'","-eq 4500) 'Cinema price'").Rep
 [IO.File]::WriteAllText((Join-Path $PSScriptRoot 'tests/Verify-Sweet.ps1'),$tests,(New-Object Text.UTF8Encoding($true)))
 if($Package){
     $null=New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'releases') -Force
-    $files=@('Sweet Sensation.exe','Sweet Sensation.ps1','Core.ps1','History.ps1','Fechamento.txt','LEIA-ME.txt','assets') | ForEach-Object {Join-Path $destination $_}
-    Compress-Archive -LiteralPath $files -DestinationPath (Join-Path $PSScriptRoot 'releases/Sweet-Sensation-V5.zip') -Force
+    $files=@('Sweet Sensation.exe','Sweet Sensation.ps1','Core.ps1','History.ps1','LightLayout.ps1','Fechamento.txt','LEIA-ME.txt','assets') | ForEach-Object {Join-Path $destination $_}
+    Compress-Archive -LiteralPath $files -DestinationPath (Join-Path $PSScriptRoot 'releases/Sweet-Sensation-V6.zip') -Force
 }

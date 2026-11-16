@@ -53,7 +53,7 @@ public class BrandButton : Button {
  protected override void OnMouseLeave(EventArgs e){hover=false;base.OnMouseLeave(e);Invalidate();}
  protected override void OnPaint(PaintEventArgs e){
   e.Graphics.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-  Color bg=Enabled && hover ? FlatAppearance.MouseOverBackColor : BackColor;
+  Color bg=Enabled && hover && BackColor != ColorTranslator.FromHtml("#590027") ? FlatAppearance.MouseOverBackColor : BackColor;
   if(bg.IsEmpty) bg=BackColor;
   using(SolidBrush parent=new SolidBrush(Parent==null ? BackColor : Parent.BackColor)) e.Graphics.FillRectangle(parent,ClientRectangle);
   using(System.Drawing.Drawing2D.GraphicsPath path=new System.Drawing.Drawing2D.GraphicsPath()){
@@ -62,7 +62,7 @@ public class BrandButton : Button {
    using(SolidBrush fill=new SolidBrush(bg)) e.Graphics.FillPath(fill,path);
    if(FlatAppearance.BorderSize>0) using(Pen border=new Pen(FlatAppearance.BorderColor,1)) e.Graphics.DrawPath(border,path);
   }
-  Color fg=Enabled ? ForeColor : ColorTranslator.FromHtml("#CBA8BB");
+  Color fg=Enabled ? ForeColor : ColorTranslator.FromHtml("#72636C");
   TextRenderer.DrawText(e.Graphics,Text,Font,ClientRectangle,fg,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
   if(Focused) ControlPaint.DrawFocusRectangle(e.Graphics,new Rectangle(4,4,Width-8,Height-8),fg,bg);
  }
@@ -79,7 +79,7 @@ public class TrayForm : Form {
 "@
 [Windows.Forms.Application]::EnableVisualStyles()
 $script:Theme=@{}
-foreach($entry in @{Wine='#590027';Pink='#F7A6CE';Canvas='#180E1A';Surface='#241326';Text='#FCE7F2';Muted='#CBA8BB';Line='#6E3A55';Error='#FF8EAF';Disabled='#44283A';Hover='#7E2150';Focus='#482139'}.GetEnumerator()){
+foreach($entry in @{Wine='#590027';Pink='#F7A6CE';Canvas='#FFFFFF';Surface='#FFFFFF';Text='#241B21';Muted='#72636C';Line='#EADFE6';Error='#B3214F';Disabled='#F2EAF0';Hover='#FBE4EF';Focus='#FFF1F7'}.GetEnumerator()){
     $script:Theme[$entry.Key]=[Drawing.ColorTranslator]::FromHtml($entry.Value)
 }
 . (Join-Path $PSScriptRoot 'Core.ps1')
@@ -142,7 +142,7 @@ function Label($Parent, $Text, $X, $Y, $W, $Size = 10, $H = 26) {
 }
 function Button($Parent, $Text, $X, $Y, $W, [scriptblock]$Action) {
     $o = New-Object BrandButton; $o.Text = $Text; $o.SetBounds($X, $Y, $W, 36)
-    $o.FlatStyle = 'Flat'; $o.BackColor = $Theme.Surface; $o.ForeColor=$Theme.Pink
+    $o.FlatStyle = 'Flat'; $o.BackColor = $Theme.Surface; $o.ForeColor=$Theme.Wine
     $o.FlatAppearance.BorderColor=$Theme.Line; $o.FlatAppearance.MouseOverBackColor=$Theme.Hover; $o.Add_Click($Action)
     $Parent.Controls.Add($o); return $o
 }
@@ -160,7 +160,7 @@ function Make-Group($Parent, $Text, $X, $Y, $W, $H) {
     $o = New-Object Windows.Forms.GroupBox; $o.Text = $Text; $o.SetBounds($X, $Y, $W, $H); $Parent.Controls.Add($o); return $o
 }
 function Radio($Parent, $Text, $X, $Y, $W) {
-    $o = New-Object ToggleRadioButton; $o.Text = $Text; $o.SetBounds($X, $Y, $W, 28); $o.ForeColor=$Theme.Pink; $o.FlatStyle='Flat'; $Parent.Controls.Add($o); return $o
+    $o = New-Object ToggleRadioButton; $o.Text = $Text; $o.SetBounds($X, $Y, $W, 28); $o.ForeColor=$Theme.Wine; $o.FlatStyle='Flat'; $Parent.Controls.Add($o); return $o
 }
 function Reset-Entry {
     $script:editingId = $null; $add.Text = 'Registrar venda'; $cancel.Visible = $false
@@ -370,9 +370,9 @@ function Start-NewShift {
 function Style-List($Control) {
     $Control.BackColor=$Theme.Surface; $Control.ForeColor=$Theme.Text; $Control.OwnerDraw=$true; $Control.BorderStyle='FixedSingle'
     $Control.Add_DrawColumnHeader({param($sender,$e)
-        $b=New-Object Drawing.SolidBrush($Theme.Wine)
+        $b=New-Object Drawing.SolidBrush($Theme.Focus)
         try{$e.Graphics.FillRectangle($b,$e.Bounds)}finally{$b.Dispose()}
-        [Windows.Forms.TextRenderer]::DrawText($e.Graphics,$e.Header.Text,$sender.Font,$e.Bounds,$Theme.Pink,([Windows.Forms.TextFormatFlags]::Left -bor [Windows.Forms.TextFormatFlags]::VerticalCenter))
+        [Windows.Forms.TextRenderer]::DrawText($e.Graphics,$e.Header.Text,$sender.Font,$e.Bounds,$Theme.Wine,([Windows.Forms.TextFormatFlags]::Left -bor [Windows.Forms.TextFormatFlags]::VerticalCenter))
     })
     $Control.Add_DrawSubItem({param($sender,$e)
         $bg=$Theme.Surface; if($e.Item.Selected){$bg=$Theme.Focus}
@@ -694,6 +694,7 @@ $form.Add_FormClosing({ param($sender, $e)
     }
 })
 try {
+    . (Join-Path $PSScriptRoot 'LightLayout.ps1')
     $script:uiReady = $true; Load-Settings; Reset-Entry; Save-State; Refresh-View
     if ($script:state.Settings.Ready) { Hide-Setup; $form.ActiveControl = $entryRows.WD.Packs }
     else { Show-Setup }

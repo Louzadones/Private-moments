@@ -178,7 +178,7 @@ Sync-MonthlySales $recoveryRoot $null ([datetime]'2026-12-31T23:00:00')
 Assert ((Get-Content -LiteralPath (Join-Path $recoveryRoot 'Vendas_2026-12.txt') -Raw -Encoding UTF8).Contains('TOTAL:  €0')) 'Last day must produce an empty month summary too'
 $smoke = Join-Path $PSScriptRoot ('qa-' + [guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $smoke
-foreach($name in @('Private Moments.exe','Private Moments.ps1','Core.ps1','History.ps1','Fechamento.txt','LEIA-ME.txt','assets')) {
+foreach($name in @('Private Moments.exe','Private Moments.ps1','Core.ps1','History.ps1','LightLayout.ps1','Fechamento.txt','LEIA-ME.txt','assets')) {
     Copy-Item -LiteralPath (Join-Path $source $name) -Destination $smoke -Recurse
 }
 $script = Get-Content -LiteralPath (Join-Path $source 'Private Moments.ps1') -Raw -Encoding UTF8
@@ -187,7 +187,13 @@ $form.Show(); [Windows.Forms.Application]::DoEvents()
 if([Diagnostics.Process]::GetCurrentProcess().ProcessName -ne 'Private Moments'){throw 'Actual window process must be branded executable, not powershell.exe'}
 if($form.Icon.Width -ne 32 -or $tray.Icon.Width -ne 16){throw 'App and tray must use correctly sized branded icons'}
 if($Theme.Wine.ToArgb() -ne [Drawing.ColorTranslator]::FromHtml('#590027').ToArgb() -or $Theme.Pink.ToArgb() -ne [Drawing.ColorTranslator]::FromHtml('#F7A6CE').ToArgb()){throw 'Brand palette is incorrect'}
-if($entryRows.WD.CashRadio.ForeColor.ToArgb() -ne $Theme.Pink.ToArgb()){throw 'Payment controls must use brand palette'}
+if($entryRows.WD.CashRadio.ForeColor.ToArgb() -ne $Theme.Wine.ToArgb()){throw 'Payment controls must use brand palette'}
+if($Theme.Canvas.ToArgb() -ne [Drawing.Color]::White.ToArgb()){throw 'Light canvas required'}
+$script:navButtons['Histórico'].PerformClick()
+if($tabs.SelectedTab -ne $historyTab -or $pageTitle.Text -ne 'Seu histórico, organizado.'){throw 'History sidebar navigation failed'}
+$script:navButtons['Fechamento detalhado'].PerformClick()
+if($tabs.SelectedTab -ne $closingTab){throw 'Closing sidebar navigation failed'}
+Show-Setup
 if ($wdPacks.Text -ne '' -or $jdCount.Text -ne '' -or $sdPacks.Text -ne '') { throw 'Initial zero fields must be blank' }
 if (-not ($wdPacks.Top -lt $jdCount.Top -and $jdCount.Top -lt $sdPacks.Top)) { throw 'Initial stock order incorrect' }
 if (-not ($wdPacks.TabIndex -lt $wdLoose.TabIndex -and $wdLoose.TabIndex -lt $jdCount.TabIndex -and $jdCount.TabIndex -lt $sdPacks.TabIndex -and $sdPacks.TabIndex -lt $sdLoose.TabIndex)) { throw 'Tab order incorrect' }; $wdLoose.Focus() | Out-Null; $form.SelectNextControl($wdLoose, $true, $true, $true, $true) | Out-Null; if (-not $jdCount.Focused) { throw 'Tab from WD loose did not go to JD' }; $form.SelectNextControl($jdCount, $true, $true, $true, $true) | Out-Null; if (-not $sdPacks.Focused) { throw 'Tab from JD did not go to SD packs' }; $form.SelectNextControl($sdPacks, $true, $true, $true, $true) | Out-Null; if (-not $sdLoose.Focused) { throw 'Tab from SD packs did not go to SD loose' }; $wdPacks.Text = '59'; if ($wdPacks.Value -ne 59) { throw 'Typed quantity not parsed' }; $wdPacks.Value = 59; $wdLoose.Value = 2; $jdCount.Value = 42; $sdPacks.Value = 3
