@@ -445,7 +445,7 @@ foreach($key in @('WD','Shop','Cinema','TOTAL')){
 $grid = New-Object Windows.Forms.TableLayoutPanel
 $grid.SetBounds(14,48,958,212); $grid.ColumnCount = 9; $grid.RowCount = 6
 $grid.CellBorderStyle = 'Single'; $grid.Margin = 0; $grid.Padding = 0; $grid.BackColor=$Theme.Canvas
-foreach ($w in @(90,105,125,100,120,120,100,95,93)) { $null = $grid.ColumnStyles.Add((New-Object Windows.Forms.ColumnStyle([Windows.Forms.SizeType]::Absolute, $w))) }
+foreach ($w in @(120,95,105,100,120,120,100,95,93)) { $null = $grid.ColumnStyles.Add((New-Object Windows.Forms.ColumnStyle([Windows.Forms.SizeType]::Absolute, $w))) }
 $null = $grid.RowStyles.Add((New-Object Windows.Forms.RowStyle([Windows.Forms.SizeType]::Absolute, 34)))
 for ($i=1;$i -le 5;$i++) { $null = $grid.RowStyles.Add((New-Object Windows.Forms.RowStyle([Windows.Forms.SizeType]::Absolute,34))) }
 $salesTab.Controls.Add($grid)
@@ -479,7 +479,7 @@ foreach ($c in @('WD','JD','SD','Shop','Cinema')) {
   $grid.Controls.Add($cash,4,$row); $grid.Controls.Add($card,5,$row)
  } else { $grid.Controls.Add($cash,7,$row); $grid.Controls.Add($card,8,$row) }
  $cashRadio.AccessibleName="$c dinheiro"; $cardRadio.AccessibleName="$c cartão"; $splitRadio.AccessibleName="$c dividido"
- $entryRows[$c]=@{Packs=$packs;Loose=$loose;Count=$count;Total=$total;Cash=$cash;Card=$card;CashRadio=$cashRadio;CardRadio=$cardRadio;SplitRadio=$splitRadio}
+ $entryRows[$c]=@{StockLabel=$name;Packs=$packs;Loose=$loose;Count=$count;Total=$total;Cash=$cash;Card=$card;CashRadio=$cashRadio;CardRadio=$cardRadio;SplitRadio=$splitRadio}
  foreach($radio in @($cashRadio,$cardRadio,$splitRadio)) { $radio.Tag=$c; $radio.Add_CheckedChanged({param($sender,$e) if($script:uiReady){Sync-Payment ([string]$sender.Tag)}}) }
  $packs.Add_ValueChanged({Update-Prices});$loose.Add_ValueChanged({Update-Prices});$count.Add_ValueChanged({Update-Prices});$cash.Add_TextChanged({Update-Prices});$card.Add_TextChanged({Update-Prices})
  $row++
@@ -612,6 +612,13 @@ function Refresh-View {
     }
     $list.EndUpdate()
     $remaining = Get-RemainingStock $script:state
+    foreach($category in @('WD','JD','SD')) {
+        $text=$category+' · —'
+        if($script:state.Settings.Ready){$text=$category+' · '+(Format-Stock $category $remaining[$category])}
+        $entryRows[$category].StockLabel.Text=$text
+        $entryRows[$category].StockLabel.AccessibleName=$category+' estoque disponível: '+$text
+        $tooltips.SetToolTip($entryRows[$category].StockLabel,'Estoque disponível. WD e SD: pacotes de 4 e avulsos; JD: unidades.')
+    }
     if ($script:state.Settings.Ready) { $stockLabel.Text = "Estoque restante: WD $(Format-Stock 'WD' $remaining.WD)   |   JD $(Format-Stock 'JD' $remaining.JD)   |   SD $(Format-Stock 'SD' $remaining.SD)" }
     else { $stockLabel.Text = 'Preencha o estoque inicial na aba Início do turno.' }
     try { $closingReport.Text = Get-ClosingReport $script:state }

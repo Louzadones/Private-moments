@@ -253,6 +253,7 @@ if ($remaining.WD -ne 233 -or $remaining.SD -ne 7 -or $remaining.JD -ne 37) { th
 if ($entryRows.WD.Packs.Text -ne '' -or $entryRows.WD.CashRadio.Checked -or $entryRows.WD.SplitRadio.Checked -or $entryRows.WD.Cash.Text -ne '') { throw 'Sale not cleared' }
 if ($report.Text -notmatch 'WD: €220' -or $report.Text -notmatch 'TOTAL:  €266.5') { throw 'Hourly report totals incorrect' }
 if (-not $closingReport.Text.Contains('WD..cash ….€.20') -or -not $closingReport.Text.Contains('SD..VISA..€.50')) { throw 'Closing breakdown incorrect' }
+if ($entryRows.WD.StockLabel.Text -ne 'WD · 58-1' -or $entryRows.JD.StockLabel.Text -ne 'JD · 37' -or $entryRows.SD.StockLabel.Text -ne 'SD · 1-3') { throw 'Live category stock incorrect after sale' }
 # Invalid mixed payment must reject the entire basket without changing inventory.
 $entryRows.WD.Loose.Value = 1; $entryRows.WD.SplitRadio.Checked = $true; $entryRows.WD.Cash.Text = '14'
 $rejected = $false; try { Register-Basket } catch { $rejected = $true }

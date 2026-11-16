@@ -10,5 +10,5 @@ if ($Package) {
     $null = New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'releases') -Force
     $files = @('Private Moments.exe','Private Moments.ps1','Core.ps1','History.ps1','LightLayout.ps1','Fechamento.txt','LEIA-ME.txt') | ForEach-Object { Join-Path $PSScriptRoot "app/$_" }
     $files += Join-Path $PSScriptRoot 'app/assets'
-    Compress-Archive -LiteralPath $files -DestinationPath (Join-Path $PSScriptRoot 'releases/Private-Moments-V21.zip') -Force
+    Compress-Archive -LiteralPath $files -DestinationPath (Join-Path $PSScriptRoot 'releases/Private-Moments-V22.zip') -Force
 }
