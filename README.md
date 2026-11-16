@@ -4,9 +4,11 @@ Aplicativo para Windows que registra vendas, controla estoque e prepara os relat
 
 ## Usar
 
-Baixe [Private-Moments-V15.zip](releases/Private-Moments-V15.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Mantenha a pasta `assets` junto ao aplicativo. Só a janela do aplicativo aparece.
+Baixe [Private-Moments-V16.zip](releases/Private-Moments-V16.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Mantenha a pasta `assets` junto ao aplicativo. Só a janela do aplicativo aparece.
 
-A segunda loja tem seu próprio pacote: [Sweet-Sensation-V3.zip](releases/Sweet-Sensation-V3.zip). Extraia em outra pasta e abra **Sweet Sensation.exe**. Ela tem logo S, nome e relatórios próprios. Cinema custa **€15 no Sweet Sensation** e **€18 no Private Moments**. As duas versões podem funcionar ao mesmo tempo, cada uma com seus arquivos de vendas, estoque e turnos. Não misture os arquivos `dados.json` das lojas.
+A segunda loja tem seu próprio pacote: [Sweet-Sensation-V4.zip](releases/Sweet-Sensation-V4.zip). Extraia em outra pasta e abra **Sweet Sensation.exe**. Ela tem logo S, nome e relatórios próprios. Cinema custa **€15 no Sweet Sensation** e **€18 no Private Moments**. As duas versões podem funcionar ao mesmo tempo, cada uma com seus arquivos de vendas, estoque e turnos. Não misture os arquivos `dados.json` das lojas.
+
+Promoções nos dois apps: **5 pacotes de WD (20 comprimidos) por €180** e **7 JD por €90**. WD usa automaticamente grupos de 5 pacotes, com os pacotes restantes a €50 e avulsos a €15: 6 pacotes = €230, 10 = €360. A baixa continua sendo pela quantidade real vendida. Valores de vendas já salvas não são alterados retroativamente.
 
 O calendário de um novo turno abre com a data atual do PC e mostra o dia da semana. A data do registro é separada da abertura: um cadastro na madrugada de terça pode mostrar terça no calendário e manter segunda no fechamento. Corrigir estoque ou nome sem mudar a data do calendário preserva a data de abertura já salva. Vendas históricas conservam seus valores; o novo preço de Cinema se aplica aos novos lançamentos e às correções confirmadas pelo operador.
 

@@ -129,7 +129,11 @@ function Assert-ClosingReady($State) {
 }
 function Get-Price([string]$Category, [int]$Packs, [int]$Loose, [int]$Count) {
     switch ($Category) {
-        WD { return [long]($Packs * 5000 + $Loose * 1500) }
+        WD {
+            $combos=[long][math]::Floor($Packs / 5)
+            $remaining=$Packs % 5
+            return [long]($combos * 18000 + $remaining * 5000 + $Loose * 1500)
+        }
         SD { return [long]($Packs * 6000 + $Loose * 2000) }
         Cinema { return [long]($Count * (Get-CinemaUnitPrice)) }
         JD {

@@ -455,7 +455,7 @@ foreach ($c in @('WD','JD','SD','Shop','Cinema')) {
     $tooltips.SetToolTip($r.CardRadio,"$c — pagar tudo no cartão")
     $tooltips.SetToolTip($r.SplitRadio,"$c — dividir entre dinheiro e cartão")
 }
-$tooltips.SetToolTip($entryRows.WD.Packs,'WD: pacote com 4 por €50. Avulso: €15.')
+$tooltips.SetToolTip($entryRows.WD.Packs,'WD: 1 pacote de 4 por €50; promoção de 5 pacotes por €180. Combos automáticos. Avulso: €15.')
 $tooltips.SetToolTip($entryRows.WD.Loose,'WD: €15 por comprimido avulso.')
 $tooltips.SetToolTip($entryRows.SD.Packs,'SD: pacote com 4 por €60. Avulso: €20.')
 $tooltips.SetToolTip($entryRows.SD.Loose,'SD: €20 por comprimido avulso.')

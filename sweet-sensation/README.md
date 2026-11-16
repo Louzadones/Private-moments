@@ -2,7 +2,9 @@
 
 Aplicativo Windows de vendas, estoque e relatórios da loja Sweet Sensation.
 
-Baixe [Sweet-Sensation-V3.zip](../releases/Sweet-Sensation-V3.zip), extraia todos os arquivos para uma pasta própria e abra **Sweet Sensation.exe**. Preserve a pasta `assets` junto ao executável. Cinema custa **€15 por entrada**.
+Baixe [Sweet-Sensation-V4.zip](../releases/Sweet-Sensation-V4.zip), extraia todos os arquivos para uma pasta própria e abra **Sweet Sensation.exe**. Preserve a pasta `assets` junto ao executável. Cinema custa **€15 por entrada**.
+
+Promoções automáticas: **5 pacotes de WD por €180** e **7 JD por €90**. Avulsos de WD continuam a €15; cada pacote tem quatro comprimidos. Os valores históricos são preservados.
 
 O calendário de um novo turno acompanha a data atual e o dia da semana do PC. A data de registro fica separada da abertura do turno usada no fechamento. Valores de vendas anteriores não são recalculados automaticamente.
 

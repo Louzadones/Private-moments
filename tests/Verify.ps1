@@ -106,6 +106,10 @@ Get-ChildItem -LiteralPath $source -Filter '*.ps1' | ForEach-Object {
     Assert ($errors.Count -eq 0) ($errors | Out-String)
 }
 Assert ((Get-Price 'WD' 1 1 0) -eq 6500) 'WD price'
+foreach($pair in @(@(4,20000),@(5,18000),@(6,23000),@(7,28000),@(10,36000),@(12,46000))){
+    Assert ((Get-Price 'WD' $pair[0] 0 0) -eq $pair[1]) 'WD five-package promotion and remainders'
+}
+Assert ((Get-Price 'WD' 5 2 0) -eq 21000) 'WD promotion keeps loose pill price'
 Assert ((Get-Price 'SD' 1 1 0) -eq 8000) 'SD price'
 foreach ($pair in @(@(1,2000),@(4,5500),@(5,7500),@(7,9000),@(8,11000),@(14,18000))) { Assert ((Get-Price 'JD' 0 0 $pair[0]) -eq $pair[1]) 'JD best price' }
 Assert ((Get-Price 'Cinema' 0 0 3) -eq 5400) 'Cinema price'
@@ -188,6 +192,14 @@ if ($add.Enabled -or $basketHint.Text -notmatch 'excede o total em €5') { thro
 $entryRows.WD.CashRadio.Checked=$true
 if (-not $add.Enabled) { throw 'Full cash payment should enable registration' }
 Reset-Entry
+$entryRows.WD.Packs.Value=5; $entryRows.WD.CashRadio.Checked=$true
+$entryRows.JD.Count.Value=7; $entryRows.JD.CardRadio.Checked=$true
+if($entryRows.WD.Total.Text -ne '€180' -or $entryRows.JD.Total.Text -ne '€90'){throw 'Promotion totals not shown in form'}
+$add.PerformClick()
+if($script:state.Sales.Count -ne 2 -or (Get-Totals $script:state.Sales).WD -ne 18000 -or (Get-Totals $script:state.Sales).JD -ne 9000){throw 'Promotions did not register at correct prices'}
+$promotionStock=Get-RemainingStock $script:state
+if($promotionStock.WD -ne 218 -or $promotionStock.JD -ne 35){throw 'Promotion must deduct 20 WD tablets and 7 JD units'}
+$script:state.Sales=@(); Save-State; Refresh-View; Reset-Entry
 $entryRows.WD.Packs.Value = 1; $entryRows.WD.Loose.Value = 1
 $entryRows.WD.SplitRadio.Checked = $true; $entryRows.WD.Cash.Text = '20'; $entryRows.WD.Card.Text = '45'
 $entryRows.SD.Packs.Value = 1; $entryRows.SD.Loose.Value = 1

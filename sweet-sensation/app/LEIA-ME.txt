@@ -1,4 +1,4 @@
-SWEET SENSATION — V3
+SWEET SENSATION — V4
 
 Extraia TODOS os arquivos do ZIP para uma pasta própria e abra Sweet Sensation.exe.
 Mantenha a pasta assets junto dos arquivos. Requer Windows, Windows PowerShell 5.1
@@ -17,7 +17,8 @@ Exemplo: segunda até terça 02:00 -> MONDAY e a data de segunda.
 Cadastros antigos de madrugada são corrigidos uma vez ao abrir.
 
 VENDAS
-WD: pacote de 4 por €50; avulso por €15.
+WD: pacote de 4 por €50; promoção de 5 pacotes por €180; avulso por €15.
+Combos automáticos: 6 pacotes por €230; 10 por €360. Avulsos são somados à parte.
 JD: 1 por €20, 4 por €55, 7 por €90; menor combinação automática.
 SD: pacote de 4 por €60; avulso por €20.
 Cinema: €15 por entrada. Shop: digite dinheiro/cartão diretamente.

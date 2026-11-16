@@ -27,5 +27,5 @@ $tests=$tests.Replace("-eq 5400) 'Cinema price'","-eq 4500) 'Cinema price'").Rep
 if($Package){
     $null=New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'releases') -Force
     $files=@('Sweet Sensation.exe','Sweet Sensation.ps1','Core.ps1','Fechamento.txt','LEIA-ME.txt','assets') | ForEach-Object {Join-Path $destination $_}
-    Compress-Archive -LiteralPath $files -DestinationPath (Join-Path $PSScriptRoot 'releases/Sweet-Sensation-V3.zip') -Force
+    Compress-Archive -LiteralPath $files -DestinationPath (Join-Path $PSScriptRoot 'releases/Sweet-Sensation-V4.zip') -Force
 }
