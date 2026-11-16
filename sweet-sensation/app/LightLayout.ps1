@@ -66,7 +66,7 @@ $script:navButtons=@{}
 $setupNav=Button $side 'Começar turno' 12 116 196 { Run-Action { Show-Setup } }
 $setupNav.Height=48; $setupNav.Tag=$setupTab
 $script:navButtons['Começar turno']=$setupNav
-$navY=176
+$navY=204
 foreach($definition in @(@('Vendas e relatórios',$salesTab),@('Fechamento detalhado',$closingTab),@('Histórico',$historyTab))){
     $nav=Button $side $definition[0] 12 $navY 196 {}
     $nav.Height=48; $nav.Tag=$definition[1]; $nav.FlatAppearance.BorderSize=2
