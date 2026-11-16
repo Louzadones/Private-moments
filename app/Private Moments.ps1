@@ -79,7 +79,7 @@ public class TrayForm : Form {
 "@
 [Windows.Forms.Application]::EnableVisualStyles()
 $script:Theme=@{}
-foreach($entry in @{Wine='#590027';Pink='#F7A6CE';Canvas='#FFFFFF';Surface='#FFFFFF';Text='#241B21';Muted='#72636C';Line='#EADFE6';Error='#B3214F';Disabled='#F2EAF0';Hover='#FBE4EF';Focus='#FFF1F7'}.GetEnumerator()){
+foreach($entry in @{Wine='#590027';Pink='#F7A6CE';Canvas='#FFFFFF';Surface='#FFFFFF';Text='#241B21';Muted='#72636C';Line='#EADFE6';Error='#B3214F';Disabled='#F2EAF0';Hover='#D98CAD';Focus='#E5A0BA'}.GetEnumerator()){
     $script:Theme[$entry.Key]=[Drawing.ColorTranslator]::FromHtml($entry.Value)
 }
 . (Join-Path $PSScriptRoot 'Core.ps1')
