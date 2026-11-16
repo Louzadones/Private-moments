@@ -217,7 +217,7 @@ function Update-EntryFeedback {
                     $units = [long]$r.Count.Value
                     if ($c -ne 'JD') { $units = [long]($r.Packs.Value * 4 + $r.Loose.Value) }
                     if (-not $script:state.Settings.Ready) { $problem = 'salve o estoque inicial no menu Turno' }
-                    elseif ($sold[$c] + $units -gt [long]$script:state.Settings.Stock.$c) { $problem = 'quantidade maior que o estoque disponível' }
+                    elseif ($sold[$c] + $units -gt [long](Get-AvailableStock $script:state)[$c]) { $problem = 'quantidade maior que o estoque disponível' }
                 }
                 if ($problem -eq '' -and $c -ne 'Shop') {
                     if (-not ($r.CashRadio.Checked -or $r.CardRadio.Checked -or $r.SplitRadio.Checked)) { $problem = 'escolha Dinheiro, Cartão ou Dividido' }
@@ -266,7 +266,7 @@ function Register-Basket {
         if ($cash + $card -ne $price) { throw "${c}: dinheiro + cartão deve ser exatamente $(Format-Money $price)." }
         if ($c -in @('WD', 'JD', 'SD')) {
             if (-not $script:state.Settings.Ready) { throw 'Salve o estoque inicial antes de registrar produtos.' }
-            if ($units -lt 1 -or $sold[$c] + $units -gt [long]$script:state.Settings.Stock.$c) { throw "${c}: confira a quantidade e o estoque disponível." }
+            if ($units -lt 1 -or $sold[$c] + $units -gt [long](Get-AvailableStock $script:state)[$c]) { throw "${c}: confira a quantidade e o estoque disponível." }
         }
         $newRows += [pscustomobject]@{ Id = [guid]::NewGuid().ToString(); BatchId = $batch; At = $at; Category = $c; Payment = 'Split'; Quantity = $units; Cents = $price; CashCents = $cash; CardCents = $card; Packs = [int]$r.Packs.Value; Loose = [int]$r.Loose.Value }
     }
@@ -311,7 +311,7 @@ function Save-ShiftSettings {
     if ($name -eq '' -or $name -match '[\r\n{}]') { throw 'Informe o nome do responsável em uma única linha.' }
     $stock = [pscustomobject]@{ WD = [long]($wdPacks.Value * 4 + $wdLoose.Value); JD = [long]$jdCount.Value; SD = [long]($sdPacks.Value * 4 + $sdLoose.Value) }
     $sold = Get-SoldQuantities $script:state.Sales
-    foreach ($c in @('WD', 'JD', 'SD')) { if ($stock.$c -lt $sold[$c]) { throw "O estoque inicial de $c é menor que a quantidade já vendida." } }
+    foreach ($c in @('WD', 'JD', 'SD')) { if (($stock.$c + (Get-AvailableStock $script:state)[$c] - $script:state.Settings.Stock.$c) -lt $sold[$c]) { throw "O estoque inicial de $c é menor que a quantidade já vendida." } }
     $previousCalendar=Get-ShiftCalendarDate $script:state
     if(-not $script:state.Settings.Ready -or $shiftDate.Value.Date -ne $previousCalendar.Date){
         $script:state.Settings.Date = (Get-OpeningDateFromCalendar $shiftDate.Value (Get-Date)).ToString('yyyy-MM-dd')
@@ -322,6 +322,7 @@ function Save-ShiftSettings {
     $script:state.Settings.Name = $name; $script:state.Settings.Stock = $stock; $script:state.Settings.Ready = $true
     Save-State; Refresh-View; Hide-Setup; Reset-Entry
     $status.Text = 'Dados do turno salvos. O estoque inicial não muda quando você registra vendas.'
+    if ($env:PRIVATE_MOMENTS_TEST_MODE -ne '1') { Show-StockMessage }
 }
 function Edit-Selected {
     if ($list.SelectedItems.Count -eq 0) { throw 'Selecione uma linha do histórico para corrigir.' }

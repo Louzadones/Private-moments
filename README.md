@@ -6,9 +6,9 @@ Interface clara com fundo branco e detalhes em vinho e rosa. O menu lateral orga
 
 ## Usar
 
-Baixe [Private-Moments-V20.zip](releases/Private-Moments-V20.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Mantenha a pasta `assets` junto ao aplicativo. Só a janela do aplicativo aparece. A interface roda no próprio executável, com ícone e identidade próprios na barra de tarefas.
+Baixe [Private-Moments-V21.zip](releases/Private-Moments-V21.zip), extraia todos os arquivos para uma pasta e abra **Private Moments.exe**. Mantenha a pasta `assets` junto ao aplicativo. Só a janela do aplicativo aparece. A interface roda no próprio executável, com ícone e identidade próprios na barra de tarefas.
 
-A segunda loja tem seu próprio pacote: [Sweet-Sensation-V8.zip](releases/Sweet-Sensation-V8.zip). Extraia em outra pasta e abra **Sweet Sensation.exe**. Ela tem logo S, nome e relatórios próprios. Cinema custa **€15 no Sweet Sensation** e **€18 no Private Moments**. As duas versões podem funcionar ao mesmo tempo, cada uma com seus arquivos de vendas, estoque e turnos. Não misture os arquivos `dados.json` das lojas.
+A segunda loja tem seu próprio pacote: [Sweet-Sensation-V9.zip](releases/Sweet-Sensation-V9.zip). Extraia em outra pasta e abra **Sweet Sensation.exe**. Ela tem logo S, nome e relatórios próprios. Cinema custa **€15 no Sweet Sensation** e **€18 no Private Moments**. As duas versões podem funcionar ao mesmo tempo, cada uma com seus arquivos de vendas, estoque e turnos. Não misture os arquivos `dados.json` das lojas.
 
 Promoções nos dois apps: **5 pacotes de WD (20 comprimidos) por €180** e **7 JD por €90**. WD usa automaticamente grupos de 5 pacotes, com os pacotes restantes a €50 e avulsos a €15: 6 pacotes = €230, 10 = €360. A baixa continua sendo pela quantidade real vendida. Valores de vendas já salvas não são alterados retroativamente.
 
@@ -95,3 +95,9 @@ powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File .\tests\Verify-Swee
 ## Referências de UX
 
 Foram usados os frameworks de Tommy Jepsen em [Awesome UX Skills](https://github.com/tommyjepsen/awesome-ux-skills) e as orientações de formulários e dashboards de Richard [@richardrx](https://x.com/richardrx), compiladas por Helio Costa em [Revenue-Centric Design](https://github.com/heliocosta-dev/revenue-centric-design). Detalhes e atribuição em [docs/UX.md](docs/UX.md); termos integrais dessa referência em [third-party/revenue-centric-design-LICENSE.txt](third-party/revenue-centric-design-LICENSE.txt).
+
+## Entradas de estoque e mensagens
+
+Use **Entrada de estoque** para registrar o que chegou durante o turno: WD e SD em pacotes de quatro e avulsos; JD por unidade. Cada entrada fica salva com data e identificador no turno e não altera as vendas ou o estoque inicial. O disponível e o estoque final incluem as entradas, descontando as vendas.
+
+Ao salvar os dados iniciais, o app mostra o texto de abertura com botão para copiar. **Texto do estoque inicial** recupera esse texto. Após registrar uma entrada, **Copiar Update** copia o estoque disponível atualizado, com o título da loja seguido de Update. **Texto Update atual** permite consultar novamente. O Float permanece €150.

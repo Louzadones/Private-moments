@@ -98,7 +98,24 @@ function Get-SoldQuantities($Sales) {
 }
 function Get-RemainingStock($State) {
     $sold = Get-SoldQuantities $State.Sales
-    return @{ WD = ([long]$State.Settings.Stock.WD - $sold.WD); JD = ([long]$State.Settings.Stock.JD - $sold.JD); SD = ([long]$State.Settings.Stock.SD - $sold.SD) }
+    $available = Get-AvailableStock $State
+    return @{ WD = ($available.WD - $sold.WD); JD = ($available.JD - $sold.JD); SD = ($available.SD - $sold.SD) }
+}
+function Get-AvailableStock($State) {
+    $stock=@{WD=[long]$State.Settings.Stock.WD;JD=[long]$State.Settings.Stock.JD;SD=[long]$State.Settings.Stock.SD}
+    foreach($entry in @($State.Restocks)) { if($null -ne $entry){foreach($c in @('WD','JD','SD')){$stock[$c]+=[long]$entry.$c}} }
+    return $stock
+}
+function Add-StockEntry($State,[long]$WD,[long]$JD,[long]$SD) {
+    if(-not $State.Settings.Ready){throw 'Inicie o turno antes de registrar um reabastecimento.'}
+    if($WD -lt 0 -or $JD -lt 0 -or $SD -lt 0 -or ($WD+$JD+$SD) -eq 0){throw 'Informe uma quantidade positiva para a entrada.'}
+    if($null -eq $State.PSObject.Properties['Restocks']){$State | Add-Member -NotePropertyName Restocks -NotePropertyValue @()}
+    $State.Restocks=@($State.Restocks)+@([pscustomobject]@{Id=[guid]::NewGuid().ToString('N');At=(Get-Date).ToString('o');WD=$WD;JD=$JD;SD=$SD})
+}
+function Get-StockMessage($State,[switch]$Update) {
+    $stock=$State.Settings.Stock; $title='Sweet Sensation'
+    if($Update){$stock=Get-RemainingStock $State; $title+=' Update'}
+    return "$title`r`nWD.$(Format-Stock 'WD' $stock.WD)`r`nJD.$(Format-Stock 'JD' $stock.JD)`r`nSD.$(Format-Stock 'SD' $stock.SD)`r`nFloat :€150"
 }
 function Get-Breakdown($Sales) {
     $b = @{ Cash = [long]0; Card = [long]0; Unknown = [long]0 }

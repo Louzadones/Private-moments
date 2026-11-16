@@ -297,6 +297,34 @@ Edit-Selected
 if ($entryRows.WD.Packs.Value -ne 1 -or $entryRows.WD.Loose.Value -ne 1) { throw 'Edit did not load separate quantities' }
 $entryRows.WD.Loose.Value = 2; $entryRows.WD.Card.Text = '60'; $add.PerformClick()
 if ($script:state.Sales.Count -ne 5 -or (Get-RemainingStock $script:state).WD -ne 232) { throw 'Edit stock failed' }
+$beforeRestock=$script:state | ConvertTo-Json -Depth 8
+$script:restockDialogError=$null
+$restockTimer=New-Object Windows.Forms.Timer; $restockTimer.Interval=150
+$restockTimer.Add_Tick({
+    $dialog=@([Windows.Forms.Application]::OpenForms | Where-Object Text -eq 'Entrada de estoque')[0]
+    if($null -eq $dialog){return}
+    $restockTimer.Stop()
+    try {
+        $inputBox=@($dialog.Controls | Where-Object {$_ -is [EmptyNumberBox] -and $_.Left -eq 150 -and $_.Top -eq 98})[0]
+        $inputBox.Value=2
+        $register=@($dialog.Controls | Where-Object Text -eq 'Registrar entrada')[0]
+        $register.PerformClick()
+        $output=@($dialog.Controls | Where-Object {$_ -is [Windows.Forms.TextBox] -and $_.Top -eq 285})[0]
+        if($register.Enabled -or $output.Text -cne (Get-StockMessage $script:state -Update)){throw 'Restock dialog did not register and show update'}
+        if(@($script:state.Restocks).Count -ne 1){throw 'Restock dialog receipt missing'}
+    }catch{$script:restockDialogError=$_.Exception.Message}
+    finally{$dialog.Close()}
+})
+$restockTimer.Start(); Show-Restock; $restockTimer.Dispose()
+if($script:restockDialogError){throw $script:restockDialogError}
+$receiptSaved=Upgrade-State (Get-Content -LiteralPath $dataPath -Raw -Encoding UTF8 | ConvertFrom-Json)
+if(@($receiptSaved.Restocks).Count -ne 1){throw 'Receipt not saved to disk'}
+$available=(Get-RemainingStock $script:state).WD
+Reset-Entry; $entryRows.WD.Loose.Value=$available; $entryRows.WD.CashRadio.Checked=$true
+if(-not $add.Enabled){throw 'Restocked inventory unavailable to sales'}
+Register-Basket
+if((Get-RemainingStock $script:state).WD -ne 0){throw 'Sale did not deduct restocked inventory'}
+$script:state=Upgrade-State ($beforeRestock | ConvertFrom-Json); Save-State; Refresh-View; Reset-Entry
 $entryRows.Shop.Cash.Text='12,34'
 $noticeBeforeClose=$tray.BalloonTipTitle
 $form.Close()

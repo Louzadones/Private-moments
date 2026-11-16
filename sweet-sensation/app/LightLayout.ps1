@@ -1,4 +1,44 @@
 ﻿# Presentation only: the existing controls retain all validation and persistence handlers.
+function Show-StockMessage([switch]$Update) {
+    if(-not $script:state.Settings.Ready){throw 'Salve os dados iniciais do turno primeiro.'}
+    $dialog=New-Object Windows.Forms.Form
+    $dialog.Text='Estoque para WhatsApp'; $dialog.ClientSize=New-Object Drawing.Size(440,255)
+    $dialog.StartPosition='CenterParent'; $dialog.Font=$form.Font; $dialog.BackColor=$Theme.Canvas; $dialog.ForeColor=$Theme.Text
+    $text=Textbox $dialog 20 20 400; $text.Multiline=$true; $text.ReadOnly=$true; $text.Height=155
+    $text.Text=Get-StockMessage $script:state -Update:$Update
+    $copy=Button $dialog 'Copiar texto' 20 193 190 { [Windows.Forms.Clipboard]::SetText($text.Text); $copy.Text='Copiado!' }
+    $null=Button $dialog 'Fechar' 230 193 190 { $dialog.Close() }
+    try{$null=$dialog.ShowDialog($form)}finally{$dialog.Dispose()}
+}
+function Show-Restock {
+    if(-not $script:state.Settings.Ready){throw 'Salve os dados iniciais do turno primeiro.'}
+    $dialog=New-Object Windows.Forms.Form
+    $dialog.Text='Entrada de estoque'; $dialog.ClientSize=New-Object Drawing.Size(540,515)
+    $dialog.StartPosition='CenterParent'; $dialog.Font=$form.Font; $dialog.BackColor=$Theme.Canvas; $dialog.ForeColor=$Theme.Text
+    $null=Label $dialog 'Informe apenas o que chegou agora.' 20 15 500 12 30
+    $null=Label $dialog 'Produto' 20 60 110
+    $null=Label $dialog 'Pacotes de 4' 150 60 150
+    $null=Label $dialog 'Avulsos / unidades' 330 60 190
+    $null=Label $dialog 'WD' 20 99 110; $wd=Numberbox $dialog 150 98 140; $wl=Numberbox $dialog 330 98 150 3
+    $null=Label $dialog 'JD' 20 144 110; $jd=Numberbox $dialog 330 143 150
+    $null=Label $dialog 'SD' 20 189 110; $sd=Numberbox $dialog 150 188 140; $sl=Numberbox $dialog 330 188 150 3
+    $wd.TabIndex=0; $wl.TabIndex=1; $jd.TabIndex=2; $sd.TabIndex=3; $sl.TabIndex=4
+    $result=Textbox $dialog 20 285 500; $result.Multiline=$true; $result.ReadOnly=$true; $result.Height=150
+    $apply=Button $dialog 'Registrar entrada' 20 235 235 {
+        Run-Action {
+            if(Test-Path -LiteralPath (Get-ClosedShiftPath $PSScriptRoot $script:state)){throw 'Este turno já foi fechado.'}
+            Add-StockEntry $script:state ([long]($wd.Value*4+$wl.Value)) ([long]$jd.Value) ([long]($sd.Value*4+$sl.Value))
+            Save-State; Refresh-View; Update-Prices
+            $result.Text=Get-StockMessage $script:state -Update
+            $apply.Enabled=$false; $copy.Enabled=$true
+            foreach($inputBox in @($wd,$wl,$jd,$sd,$sl)){$inputBox.Enabled=$false}
+            $status.Text='Reabastecimento salvo. Copie o texto de Update.'
+        }
+    }
+    $copy=Button $dialog 'Copiar Update' 20 457 235 { [Windows.Forms.Clipboard]::SetText($result.Text); $copy.Text='Copiado!' }; $copy.Enabled=$false
+    $null=Button $dialog 'Fechar' 285 457 235 { $dialog.Close() }
+    try{$null=$dialog.ShowDialog($form)}finally{$dialog.Dispose()}
+}
 $form.SuspendLayout()
 $form.MaximumSize = New-Object Drawing.Size(0,0)
 $form.MinimumSize = New-Object Drawing.Size(0,0)
@@ -29,6 +69,9 @@ foreach($definition in @(@('Vendas e relatórios',$salesTab),@('Fechamento detal
     $nav.Add_Click({param($sender,$e) $tabs.SelectedTab=$sender.Tag})
     $script:navButtons[$definition[0]]=$nav; $navY+=60
 }
+$restockNav=Button $side 'Entrada de estoque' 12 330 196 { Run-Action { Show-Restock } }; $restockNav.Height=44
+$initialNav=Button $side 'Texto do estoque inicial' 12 386 196 { Run-Action { Show-StockMessage } }; $initialNav.Height=44
+$updateNav=Button $side 'Texto Update atual' 12 442 196 { Run-Action { Show-StockMessage -Update } }; $updateNav.Height=44
 $setupNav=Button $side 'Turno e estoque' 12 627 196 { Run-Action { Show-Setup } }
 $setupNav.Anchor='Bottom,Left'; $setupNav.FlatAppearance.BorderSize=2
 $exitNav=Button $side 'Sair do aplicativo' 12 669 196 { Request-Exit }
@@ -67,7 +110,7 @@ foreach($key in @('WD','Shop','Cinema')){
 }
 $entryHeading=Label $salesTab 'Registrar venda' 16 87 350 13 29
 $entryHeading.Font=New-Object Drawing.Font('Segoe UI',13,[Drawing.FontStyle]::Bold)
-$promo=Label $salesTab 'WD: 5 pacotes por €180  ·  JD: 7 unidades por €90' 500 92 470 9 24; $promo.TextAlign='MiddleRight'; $promo.ForeColor=$Theme.Muted
+$promo=Label $salesTab '' 500 92 470 9 24; $promo.TextAlign='MiddleRight'; $promo.ForeColor=$Theme.Muted
 $grid.Top=124
 for($i=0;$i -lt 9;$i++){$cell=$grid.GetControlFromPosition($i,0); $cell.BackColor=$Theme.Focus; $cell.ForeColor=$Theme.Wine}
 $basketTotal.Top=341; $basketHint.Top=369; $add.Top=341; $cancel.Top=341
